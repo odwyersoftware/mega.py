@@ -3,6 +3,7 @@ import json
 import base64
 import struct
 import binascii
+import random
 
 def aes_cbc_encrypt(data, key):
     aes_cipher = AES.new(key, AES.MODE_CBC, '\0' * 16)
@@ -128,3 +129,11 @@ def get_chunks(size):
         del chunks[pp]
 
     return chunks
+
+# more general functions
+def make_id(length):
+    text = ''
+    possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    for i in range(length):
+        text += random.choice(possible)
+    return text

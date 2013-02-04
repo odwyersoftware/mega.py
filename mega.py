@@ -18,13 +18,13 @@ class Mega(object):
         self.timeout = 160 #max time (secs) to wait for response from api requests
         self.sid = None
         self.sequence_num = random.randint(0, 0xFFFFFFFF)
+        self.request_id = make_id(10)
 
     @classmethod
     def login(class_, email, password):
         instance = class_()
         instance.login_user(email, password)
         return instance
-
 
     def login_user(self, email, password):
         password_aes = prepare_key(str_to_a32(password))
@@ -34,7 +34,6 @@ class Mega(object):
         if isinstance(resp, int):
             raise errors.RequestError(resp)
         self._login_process(resp, password_aes)
-
 
     def _login_process(self, resp, password):
         encrypted_master_key = base64_to_a32(resp['k'])
@@ -76,18 +75,21 @@ class Mega(object):
         req = requests.post(
             '{0}://g.api.{1}/cs'.format(self.schema,self.domain), params=params, data=json.dumps([data]), timeout=self.timeout)
         json_resp = req.json()
+
         #if numeric error code response
         if isinstance(json_resp, int):
             raise errors.RequestError(json_resp)
         return json_resp[0]
 
     def get_files(self):
+        '''
+        Get all files in account
+        '''
         files = self.api_request({'a': 'f', 'c': 1})
         files_dict = {}
         for file in files['f']:
             files_dict[file['h']] = self.process_file(file)
         return files_dict
-
 
     def download_url(self, url):
         path = self.parse_url(url).split('!')
@@ -108,6 +110,57 @@ class Mega(object):
         user_data =  self.api_request({'a': 'ug'})
         return user_data
 
+    def delete_url(self, url):
+        #delete a file via it's url
+        path = self.parse_url(url).split('!')
+        file_id = path[0]
+        return self.move(file_id, 4)
+
+    def delete(self, file_id):
+        #straight delete by id
+        return self.move(file_id, 4)
+
+    def move(self, file_id, target):
+        #TODO node_id improvements
+        '''
+        Move a file to another parent node
+        params:
+        a : command
+        n : node we're moving
+        t : id of target parent node, moving to
+        i : request id
+
+        targets
+        2 : root
+        3 : inbox
+        4 : trash
+        '''
+        #get node data
+        node_data = self.api_request({'a': 'f', 'f': 1, 'p': file_id})
+        target_node_id = str(self.get_node_by_type(target)[0])
+        node_id = None
+
+        #determine node id
+        for i in node_data['f']:
+            if i['h'] is not u'':
+                node_id = i['h']
+
+        return self.api_request({'a': 'm', 'n': node_id, 't': target_node_id, 'i': self.request_id})
+
+    def get_node_by_type(self, type):
+        '''
+        Get a node by it's numeric type id, e.g:
+        0: file
+        1: dir
+        2: special: root cloud drive
+        3: special: inbox
+        4: special trash bin
+        '''
+        nodes = self.get_files()
+        for node in nodes.items():
+            if(node[1]['t'] == type):
+                return node
+
 
     def download_file(self, file_id, file_key, is_public=False):
         if is_public:
@@ -127,7 +180,7 @@ class Mega(object):
         attribs = decrypt_attr(attribs, k)
         file_name = attribs['n']
 
-        print "Downloading %s (size: %d), url = %s" % (attribs['n'], file_size, file_url)
+        print "downloading {0} (size: {1}), url = {2}".format(attribs['n'], file_size, file_url)
 
         input_file = requests.get(file_url, stream=True).raw
         output_file = open(file_name, 'wb')
@@ -168,6 +221,9 @@ class Mega(object):
             raise ValueError('Mismatched mac')
 
     def get_public_url(self, file_id, file_key):
+        '''
+        Get a files public link including decrypted key
+        '''
         if file_id and file_key:
             public_handle = self.api_request({'a': 'l', 'n': file_id})
             decrypted_key = a32_to_base64(file_key)
@@ -237,12 +293,6 @@ class Mega(object):
     def process_file(self, file):
         """
         Process a file...
-        Possible node types are:
-        0: File
-        1: Dir
-        2: Special - Root/Cloud drive
-        3: Special - Inbox
-        4: Special - Trash
         """
         if file['t'] == 0 or file['t'] == 1:
             key = file['k'][file['k'].index(':') + 1:]
