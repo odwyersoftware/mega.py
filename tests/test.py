@@ -15,7 +15,7 @@ def test():
     print(files)
 
     #upload file
-    print(m.upload('tests/test.py'))
+    print(m.upload('test.py'))
 
     #download file from url
     m.download_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
