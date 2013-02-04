@@ -10,6 +10,10 @@ def test():
     #login
     m =  mega.login(email, password)
 
+    #get user details
+    details = m.get_user()
+    print(details)
+
     #get account files
     files = m.get_files()
     print(files)

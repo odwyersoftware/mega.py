@@ -14,6 +14,10 @@ This is a work in progress, further functionality coming shortly.
 
     m = mega.login(email, password)
 
+### Get user details
+
+    details = m.get_user()
+
 ### Get account files
 
     files = m.get_files()

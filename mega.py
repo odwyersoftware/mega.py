@@ -104,6 +104,11 @@ class Mega(object):
         else:
             raise errors.RequestError('Url key missing')
 
+    def get_user(self):
+        user_data =  self.api_request({'a': 'ug'})
+        return user_data
+
+
     def download_file(self, file_id, file_key, is_public=False):
         if is_public:
             file_key = base64_to_a32(file_key)
@@ -121,6 +126,8 @@ class Mega(object):
         attribs = base64_url_decode(file_data['at'])
         attribs = decrypt_attr(attribs, k)
         file_name = attribs['n']
+
+        print "Downloading %s (size: %d), url = %s" % (attribs['n'], file_size, file_url)
 
         input_file = requests.get(file_url, stream=True).raw
         output_file = open(file_name, 'wb')
@@ -167,6 +174,7 @@ class Mega(object):
             return '{0}://{1}/#!%s!%s'.format(self.schema, self.domain) % (public_handle, decrypted_key)
         else:
             raise errors.ValidationError('File id and key must be set')
+
 
     def upload(self, filename, dest=None):
         #determine storage node
