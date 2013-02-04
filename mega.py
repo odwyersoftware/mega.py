@@ -21,9 +21,9 @@ class Mega(object):
 
     @classmethod
     def login(class_, email, password):
-        inst = class_()
-        inst.login_user(email, password)
-        return inst
+        instance = class_()
+        instance.login_user(email, password)
+        return instance
 
 
     def login_user(self, email, password):
@@ -227,6 +227,15 @@ class Mega(object):
         return data
 
     def process_file(self, file):
+        """
+        Process a file...
+        Possible node types are:
+        0: File
+        1: Dir
+        2: Special - Root/Cloud drive
+        3: Special - Inbox
+        4: Special - Trash
+        """
         if file['t'] == 0 or file['t'] == 1:
             key = file['k'][file['k'].index(':') + 1:]
             key = decrypt_key(base64_to_a32(key), self.master_key)
