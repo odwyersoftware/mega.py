@@ -32,7 +32,7 @@ This is a work in progress, further functionality coming shortly.
 
 ### Trash a file from URL or it's ID
 
-    m.delete('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
+    m.delete('utYjgSTQ')
     m.delete_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
 
 ## Requirements
