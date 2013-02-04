@@ -1,8 +1,7 @@
 # Mega.py
 
 Python library for the Mega.co.nz API, currently supporting login, uploading & downloading of files.
-
-Further functionality coming soon.
+Further functionality coming shortly.
 
 ## How To Use
 
