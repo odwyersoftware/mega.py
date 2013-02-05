@@ -97,6 +97,9 @@ class Mega(object):
         file_key = path[1]
         self.download_file(file_id, file_key, is_public=True)
 
+    def download(self, file_id, file_key):
+        self.download_file(file_id, file_key, is_public=True)
+
     def parse_url(self, url):
         #parse file id and key from url
         if('!' in url):

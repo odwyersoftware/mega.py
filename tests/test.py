@@ -25,7 +25,8 @@ def test():
     #print(m.delete('C5pxAbr'))
     #print(m.delete_url('https://mega.co.nz/#!C5pxAbrL!SPxZH0Ovn2DLK_n5hLlkGQ2oTD8HcU6TYiz_TPg78kY'))
 
-    #download file from url
+    #download file, by id+key or url
+    m.download('6hBW0R4a','By7-Vjj5xal8K5w_IXH3PlGNyZ1VvIrjZkOmHGq1X00')
     m.download_url('https://mega.co.nz/#!6hBW0R4a!By7-Vjj5xal8K5w_IXH3PlGNyZ1VvIrjZkOmHGq1X00')
 
 if __name__ == '__main__':
