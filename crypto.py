@@ -61,18 +61,12 @@ def encrypt_attr(attr, key):
 
 def decrypt_attr(attr, key):
     attr = aes_cbc_decrypt(attr, a32_to_str(key)).rstrip('\0')
-    return json.loads(attr[4:])
+    return json.loads(attr[4:]) if attr[:6] == 'MEGA{"' else False
 
 
 def a32_to_str(a):
     return struct.pack('>%dI' % len(a), *a)
 
-def aes_cbc_encrypt(data, key):
-    aes = AES.new(key, AES.MODE_CBC, '\0' * 16)
-    return aes.encrypt(data)
-
-def aes_cbc_encrypt_a32(data, key):
-    return str_to_a32(aes_cbc_encrypt(a32_to_str(data), a32_to_str(key)))
 
 def str_to_a32(b):
     if len(b) % 4:
@@ -83,12 +77,6 @@ def str_to_a32(b):
 def mpi_to_int(s):
     return int(binascii.hexlify(s[2:]), 16)
 
-def aes_cbc_decrypt(data, key):
-    decryptor = AES.new(key, AES.MODE_CBC, '\0' * 16)
-    return decryptor.decrypt(data)
-
-def aes_cbc_decrypt_a32(data, key):
-    return str_to_a32(aes_cbc_decrypt(a32_to_str(data), a32_to_str(key)))
 
 def base64_url_decode(data):
     data += '=='[(2 - len(data) * 3) % 4:]

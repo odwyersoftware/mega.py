@@ -16,7 +16,10 @@ def test():
 
     #get account files
     files = m.get_files()
-    print(files)
+    #example iterate over files
+    for file in files:
+        if files[file]['a'] != False:
+            print files[file]
 
     #upload file
     print(m.upload('test.py'))

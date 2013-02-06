@@ -292,6 +292,9 @@ class Mega(object):
         data = self.api_request({'a': 'p', 't': dest, 'n': [
             {'h': completion_file_handle, 't': 0, 'a': encrypt_attribs, 'k': encrypted_key}]}
         )
+
+        #close input file and return API msg
+        input_file.close()
         return data
 
     def process_file(self, file):
