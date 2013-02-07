@@ -31,7 +31,7 @@ This is a work in progress, further functionality coming shortly.
 ### Upload a file, and get its public link
 
     file = m.upload('myfile.doc')
-    m.get_link(file)
+    m.get_upload_link(file)
 
 ### Download a file from URL or it's ID,key combo
     m.download('utYjgSTQ','OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')

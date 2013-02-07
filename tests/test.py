@@ -27,7 +27,7 @@ def test():
     ##get file's public link
     #NOTE: currently this only works with upload() file obj, as below
     file = m.upload('test.py')
-    print(m.get_link(file))
+    print(m.get_upload_link(file))
 
     ##trash a file, by id or url
     #print(m.delete('f14U0JhD'))

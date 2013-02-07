@@ -92,7 +92,7 @@ class Mega(object):
             files_dict[file['h']] = self.process_file(file)
         return files_dict
 
-    def get_link(self, file):
+    def get_upload_link(self, file):
         '''
         Get a files public link including decrypted key
         Currently only works if passed upload() output
