@@ -36,10 +36,14 @@ This is a work in progress, further functionality coming shortly.
 ### Search for a file
     m.find('myfile.doc')
 
-### Trash a file from URL or it's ID
+### Trash a file from URL, it's ID, or from search
 
     m.delete('utYjgSTQ')
     m.delete_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
+    
+    files = m.find('myfile.doc')
+    if files:
+        m.delete(files[1]['k'])
 
 ## Requirements
 
