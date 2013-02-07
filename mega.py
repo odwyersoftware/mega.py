@@ -321,8 +321,8 @@ class Mega(object):
             key = decrypt_key(base64_to_a32(key), self.master_key)
             if file['t'] == 0:
                 k = file['k'] = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6], key[3] ^ key[7])
-                iv = file['iv'] = key[4:6] + (0, 0)
-                meta_mac = file['meta_mac'] = key[6:8]
+                file['iv'] = key[4:6] + (0, 0)
+                file['meta_mac'] = key[6:8]
             else:
                 k = file['k'] = key
             attributes = base64_url_decode(file['a'])

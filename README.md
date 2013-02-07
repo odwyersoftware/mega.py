@@ -40,7 +40,7 @@ This is a work in progress, further functionality coming shortly.
 
     m.delete('utYjgSTQ')
     m.delete_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
-    
+
     files = m.find('myfile.doc')
     if files:
         m.delete(files[1]['k'])
