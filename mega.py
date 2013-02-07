@@ -9,7 +9,6 @@ import binascii
 import requests
 import errors
 from crypto import *
-import ast
 
 class Mega(object):
 
@@ -94,8 +93,8 @@ class Mega(object):
 
     def get_upload_link(self, file):
         '''
-        Get a files public link including decrypted key
-        Currently only works if passed upload() output
+        Get a files public link inc. decrypted key
+        Requires upload() response as input
         '''
         if 'f' in file:
             file = file['f'][0]
@@ -131,12 +130,12 @@ class Mega(object):
     def delete_url(self, url):
         #delete a file via it's url
         path = self.parse_url(url).split('!')
-        file_id = path[0]
-        return self.move(file_id, 4)
+        public_handle = path[0]
+        return self.move(public_handle, 4)
 
-    def delete(self, file_id):
+    def delete(self, public_handle):
         #straight delete by id
-        return self.move(file_id, 4)
+        return self.move(public_handle, 4)
 
     def find(self, filename):
         '''
@@ -147,7 +146,7 @@ class Mega(object):
             if file[1]['a'] and file[1]['a']['n'] == filename:
                 return file
 
-    def move(self, file_id, target):
+    def move(self, public_handle, target):
         #TODO node_id improvements
         '''
         Move a file to another parent node
@@ -163,7 +162,7 @@ class Mega(object):
         4 : trash
         '''
         #get node data
-        node_data = self.api_request({'a': 'f', 'f': 1, 'p': file_id})
+        node_data = self.api_request({'a': 'f', 'f': 1, 'p': public_handle})
         target_node_id = str(self.get_node_by_type(target)[0])
         node_id = None
 
@@ -189,12 +188,12 @@ class Mega(object):
                 return node
 
 
-    def download_file(self, file_id, file_key, is_public=False):
+    def download_file(self, file_handle, file_key, is_public=False):
         if is_public:
             file_key = base64_to_a32(file_key)
-            file_data = self.api_request({'a': 'g', 'g': 1, 'p': file_id})
+            file_data = self.api_request({'a': 'g', 'g': 1, 'p': file_handle})
         else:
-            file_data = self.api_request({'a': 'g', 'g': 1, 'n': file_id})
+            file_data = self.api_request({'a': 'g', 'g': 1, 'n': file_handle})
 
         k = (file_key[0] ^ file_key[4], file_key[1] ^ file_key[5],
              file_key[2] ^ file_key[6], file_key[3] ^ file_key[7])
