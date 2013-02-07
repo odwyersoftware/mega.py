@@ -45,6 +45,7 @@ This is a work in progress, further functionality coming shortly.
 
     1. Python2.7+
     2. Python requests - python-requests.org
+    3. PyCrypto - dlitz.net/software/pycrypto/
 
 ## Tests
 
