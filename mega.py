@@ -91,6 +91,12 @@ class Mega(object):
             files_dict[file['h']] = self.process_file(file)
         return files_dict
 
+    def get_link(self, file_id, file_key):
+        if file_id and file_key:
+            return '{0}://{1}#!{2}!{3}'.format(self.schema, self.domain, file_id, file_key)
+        else:
+            raise errors.RequestError('Url key missing')
+
     def download_url(self, url):
         path = self.parse_url(url).split('!')
         file_id = path[0]
@@ -122,6 +128,17 @@ class Mega(object):
     def delete(self, file_id):
         #straight delete by id
         return self.move(file_id, 4)
+
+    def find(self, filename):
+        '''
+        Return file object from given filename
+        '''
+        files = self.get_files()
+        for file in files.items():
+            if file[1]['a'] and file[1]['a']['n'] == filename:
+                return file
+
+
 
     def move(self, file_id, target):
         #TODO node_id improvements
