@@ -6,7 +6,7 @@ Python library for the Mega.co.nz API, currently supporting:
  - downloading
  - deleting
  - searching
- 
+
 
 This is a work in progress, further functionality coming shortly.
 
@@ -28,20 +28,14 @@ This is a work in progress, further functionality coming shortly.
 
     files = m.get_files()
 
-### Get single account file
+### Upload a file, and get its public link
 
-    file = m.get_file('utYjgSTQ')
-
-### Upload a file
-
-    m.upload('myfile.doc')
+    file = m.upload('myfile.doc')
+    m.get_link(file)
 
 ### Download a file from URL or it's ID,key combo
     m.download('utYjgSTQ','OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
     m.download_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
-
-### Get a public link for account file
-    m.get_link('utYjgSTQ')
 
 ### Search account for a file
     m.find('myfile.doc')
