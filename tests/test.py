@@ -30,12 +30,10 @@ def test():
 
     ##search for a file on mega
     files = m.find('test.py')
-
     if files:
         #trash a file by it's id
         #iterate to trash multiple results
         print(m.delete(files[1]['k']))
-
 
     ##download file, by id+key or url
     #m.download('6hBW0R4a','By7-Vjj5xal8K5w_IXH3PlGNyZ1VvIrjZkOmHGq1X00')

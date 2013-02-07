@@ -138,8 +138,6 @@ class Mega(object):
             if file[1]['a'] and file[1]['a']['n'] == filename:
                 return file
 
-
-
     def move(self, file_id, target):
         #TODO node_id improvements
         '''
