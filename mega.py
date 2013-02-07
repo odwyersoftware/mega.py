@@ -91,11 +91,30 @@ class Mega(object):
             files_dict[file['h']] = self.process_file(file)
         return files_dict
 
-    def get_link(self, file_id, file_key):
-        if file_id and file_key:
-            return '{0}://{1}#!{2}!{3}'.format(self.schema, self.domain, file_id, file_key)
+    def get_file(self, file_id):
+        '''
+        Return file object from given filename
+        '''
+        files = self.get_files()
+        for file in files.items():
+            if file[1]['h'] == file_id:
+                return file
+
+    def get_link(self, file_id):
+        '''
+        Get a files public link including decrypted key
+        '''
+        file = self.get_file(file_id)
+        if file:
+            file_key = file[1]['k']
+            if file_id and file_key:
+                public_handle = self.api_request({'a': 'l', 'n': file_id})
+                decrypted_key = a32_to_base64(file_key)
+                return '{0}://{1}/#!%s!%s'.format(self.schema, self.domain) % (public_handle, decrypted_key)
+            else:
+                raise errors.ValidationError('File id and key must be set')
         else:
-            raise errors.RequestError('Url key missing')
+            raise errors.ValidationError('File not found')
 
     def download_url(self, url):
         path = self.parse_url(url).split('!')
@@ -237,18 +256,6 @@ class Mega(object):
         # check mac integrity
         if (file_mac[0] ^ file_mac[1], file_mac[2] ^ file_mac[3]) != meta_mac:
             raise ValueError('Mismatched mac')
-
-    def get_public_url(self, file_id, file_key):
-        '''
-        Get a files public link including decrypted key
-        '''
-        if file_id and file_key:
-            public_handle = self.api_request({'a': 'l', 'n': file_id})
-            decrypted_key = a32_to_base64(file_key)
-            return '{0}://{1}/#!%s!%s'.format(self.schema, self.domain) % (public_handle, decrypted_key)
-        else:
-            raise errors.ValidationError('File id and key must be set')
-
 
     def upload(self, filename, dest=None):
         #determine storage node

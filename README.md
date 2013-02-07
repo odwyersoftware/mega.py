@@ -22,6 +22,10 @@ This is a work in progress, further functionality coming shortly.
 
     files = m.get_files()
 
+### Get single account file
+
+    file = m.get_file('utYjgSTQ')
+
 ### Upload a file
 
     m.upload('myfile.doc')
@@ -30,10 +34,10 @@ This is a work in progress, further functionality coming shortly.
     m.download('utYjgSTQ','OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
     m.download_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
 
-### Get a public link for a file
-    m.get_link('utYjgSTQ','OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
+### Get a public link for account file
+    m.get_link('utYjgSTQ')
 
-### Search for a file
+### Search account for a file
     m.find('myfile.doc')
 
 ### Trash a file from URL, it's ID, or from search
@@ -61,5 +65,8 @@ This is a work in progress, further functionality coming shortly.
 
     Learn about the API at Mega.co.nz
     - https://mega.co.nz/#developers
+
+
+    Thanks to http://juIien-marchand.fr/blog/contact for examples
 
 
