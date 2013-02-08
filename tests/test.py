@@ -2,8 +2,8 @@ from mega import Mega
 
 def test():
     #user details
-    email = 'your@email.com'
-    password = 'password'
+    email = 'richard@richard.do'
+    password = 'g3tmein1988'
 
     mega = Mega()
 
@@ -25,16 +25,17 @@ def test():
     print(m.upload('test.py'))
 
     ##get file's public link
-    #NOTE: currently this only works with upload() file obj, as below
-    file = m.upload('test.py')
-    print(m.get_upload_link(file))
+    #NOTE: if passing upload() function response use get_upload_link()
+    file = m.find('test.py')
+    #print(m.get_upload_link(file))
+    print(m.get_link(file))
 
     ##trash a file, by id or url
     #print(m.delete('f14U0JhD'))
     #print(m.delete_url('https://mega.co.nz/#!f14U0JhD!S_2k-EvB5U1N3s0vm3I5C0JN2toHSGkVf0UxQsiKZ8A'))
 
     ##search for a file in account
-    file = m.find('test.py')
+    file = m.find('somefile.doc')
     if file:
         #trash a file by it's id
         print(m.delete(file[1]['k']))

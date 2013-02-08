@@ -100,10 +100,31 @@ class Mega(object):
             file = file['f'][0]
             public_handle = self.api_request({'a': 'l', 'n': file['h']})
             file_key = file['k'][file['k'].index(':') + 1:]
-            decrypted_key = a32_to_base64(decrypt_key(base64_to_a32(file_key), self.master_key))
-            return '{0}://{1}/#!{2}!{3}'.format(self.schema, self.domain, public_handle, decrypted_key)
+            decrypted_key = a32_to_base64(decrypt_key(base64_to_a32(file_key),
+                                                      self.master_key))
+            return '{0}://{1}/#!{2}!{3}'.format(self.schema,
+                                                self.domain,
+                                                public_handle,
+                                                decrypted_key)
         else:
-            raise ValueError('This function requires upload() file object')
+            raise ValueError('Upload() response required as input, use get_link() for regular file input')
+
+    def get_link(self, file):
+        '''
+        Get a file public link from given file object
+        '''
+        file = file[1]
+        if 'h' in file and 'k' in file:
+            public_handle = self.api_request({'a': 'l', 'n': file['h']})
+            file_key = file['k'][file['k'].index(':') + 1:]
+            decrypted_key = a32_to_base64(decrypt_key(base64_to_a32(file_key),
+                                                      self.master_key))
+            return '{0}://{1}/#!{2}!{3}'.format(self.schema,
+                                                self.domain,
+                                                public_handle,
+                                                decrypted_key)
+        else:
+            raise errors.ValidationError('File id and key must be present')
 
     def download_url(self, url):
         path = self.parse_url(url).split('!')
@@ -316,7 +337,7 @@ class Mega(object):
             key = file['k'][file['k'].index(':') + 1:]
             key = decrypt_key(base64_to_a32(key), self.master_key)
             if file['t'] == 0:
-                k = file['k'] = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6], key[3] ^ key[7])
+                k = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6], key[3] ^ key[7])
                 file['iv'] = key[4:6] + (0, 0)
                 file['meta_mac'] = key[6:8]
             else:
