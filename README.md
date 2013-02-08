@@ -65,10 +65,11 @@ This is a work in progress, further functionality coming shortly.
 
     Feel free to pull the source and make changes and additions.
 
-    Learn about the API at Mega.co.nz
+    Learn about the API at Mega.co.nz, more documentation coming shortly.
     - https://mega.co.nz/#developers
 
 
-    Thanks to http://juIien-marchand.fr/blog/contact for examples
+
+Thanks to http://julien-marchand.com/blog/contact for examples
 
 
