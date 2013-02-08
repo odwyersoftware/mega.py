@@ -37,8 +37,9 @@ This is a work in progress, further functionality coming shortly.
     m.download('utYjgSTQ','OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
     m.download_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
 
-### Search account for a file
-    m.find('myfile.doc')
+### Search account for a file, and get its public link
+    file = m.find('myfile.doc')
+    m.get_link(file)
 
 ### Trash a file from URL, it's ID, or from search
 
