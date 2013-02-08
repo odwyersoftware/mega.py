@@ -127,13 +127,20 @@ class Mega(object):
             raise errors.ValidationError('File id and key must be present')
 
     def download_url(self, url):
+        '''
+        Download a file by it's public url
+        '''
         path = self.parse_url(url).split('!')
         file_id = path[0]
         file_key = path[1]
         self.download_file(file_id, file_key, is_public=True)
 
-    def download(self, file_id, file_key):
-        self.download_file(file_id, file_key, is_public=True)
+    def download(self, file):
+        '''
+        Download a file by it's file object
+        '''
+        url = self.get_link(file)
+        self.download_url(url)
 
     def parse_url(self, url):
         #parse file id and key from url

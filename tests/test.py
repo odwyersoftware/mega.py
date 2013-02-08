@@ -41,7 +41,8 @@ def test():
         print(m.delete(file[1]['k']))
 
     ##download file, by id+key or url
-    #m.download('6hBW0R4a','By7-Vjj5xal8K5w_IXH3PlGNyZ1VvIrjZkOmHGq1X00')
+    #file = m.find('myfile.doc')
+    #m.download(file)
     #m.download_url('https://mega.co.nz/#!6hBW0R4a!By7-Vjj5xal8K5w_IXH3PlGNyZ1VvIrjZkOmHGq1X00')
 
 if __name__ == '__main__':
