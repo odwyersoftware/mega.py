@@ -6,7 +6,7 @@ Python library for the Mega.co.nz API, currently supporting:
  - downloading
  - deleting
  - searching
-
+ - sharing
 
 This is a work in progress, further functionality coming shortly.
 
@@ -33,7 +33,7 @@ This is a work in progress, further functionality coming shortly.
     file = m.upload('myfile.doc')
     m.get_upload_link(file)
 
-### Download a file from URL or file obj,key combo
+### Download a file from URL or file obj
     file = m.find('myfile.doc')
     m.download(file)
     m.download_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
