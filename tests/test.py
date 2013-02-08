@@ -2,8 +2,8 @@ from mega import Mega
 
 def test():
     #user details
-    email = 'richard@richard.do'
-    password = 'g3tmein1988'
+    email = 'your@email.com'
+    password = 'password'
 
     mega = Mega()
 
