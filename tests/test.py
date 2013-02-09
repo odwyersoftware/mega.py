@@ -1,5 +1,6 @@
 from mega import Mega
 
+
 def test():
     #user details
     email = 'your@email.com'
@@ -8,7 +9,7 @@ def test():
     mega = Mega()
 
     ##login
-    m =  mega.login(email, password)
+    m = mega.login(email, password)
 
     ##get user details
     details = m.get_user()
@@ -40,10 +41,11 @@ def test():
         #trash a file by it's id
         print(m.delete(file[1]['k']))
 
-    ##download file, by id+key or url
-    #file = m.find('myfile.doc')
-    #m.download(file)
-    #m.download_url('https://mega.co.nz/#!6hBW0R4a!By7-Vjj5xal8K5w_IXH3PlGNyZ1VvIrjZkOmHGq1X00')
+        ##download file, by id+key or url
+        #file = m.find('myfile.doc')
+        #m.download(file)
+        #m.download_url('https://mega.co.nz/#!6hBW0R4a!By7-Vjj5xal8K5w_IXH3PlGNyZ1VvIrjZkOmHGq1X00')
+
 
 if __name__ == '__main__':
     test()

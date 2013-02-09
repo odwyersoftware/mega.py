@@ -10,12 +10,12 @@ import requests
 import errors
 from crypto import *
 
-class Mega(object):
 
+class Mega(object):
     def __init__(self):
         self.schema = 'https'
         self.domain = 'mega.co.nz'
-        self.timeout = 160 #max time (secs) to wait for response from api requests
+        self.timeout = 160 #max time (secs) to wait for resp from api requests
         self.sid = None
         self.sequence_num = random.randint(0, 0xFFFFFFFF)
         self.request_id = make_id(10)
@@ -46,13 +46,14 @@ class Mega(object):
                 self.sid = resp['tsid']
         elif 'csid' in resp:
             encrypted_rsa_private_key = base64_to_a32(resp['privk'])
-            rsa_private_key = decrypt_key(encrypted_rsa_private_key, self.master_key)
+            rsa_private_key = decrypt_key(encrypted_rsa_private_key,
+                                          self.master_key)
 
             private_key = a32_to_str(rsa_private_key)
             self.rsa_private_key = [0, 0, 0, 0]
 
             for i in range(4):
-                l = ((ord(private_key[0]) * 256 + ord(private_key[1]) + 7) / 8) + 2
+                l = ((ord(private_key[0])*256+ord(private_key[1]) +7) / 8) + 2
                 self.rsa_private_key[i] = mpi_to_int(private_key[:l])
                 private_key = private_key[l:]
 
@@ -73,8 +74,11 @@ class Mega(object):
         if self.sid:
             params.update({'sid': self.sid})
         req = requests.post(
-            '{0}://g.api.{1}/cs'.format(self.schema,self.domain), params=params, data=json.dumps([data]), timeout=self.timeout)
-        json_resp = req.json()
+            '{0}://g.api.{1}/cs'.format(self.schema, self.domain),
+                                        params=params,
+                                        data=json.dumps([data]),
+                                        timeout=self.timeout)
+        json_resp = json.loads(req.text)
 
         #if numeric error code response
         if isinstance(json_resp, int):
@@ -107,7 +111,8 @@ class Mega(object):
                                                 public_handle,
                                                 decrypted_key)
         else:
-            raise ValueError('Upload() response required as input, use get_link() for regular file input')
+            raise ValueError('''Upload() response required as input,
+                            use get_link() for regular file input''')
 
     def get_link(self, file):
         '''
@@ -144,7 +149,7 @@ class Mega(object):
 
     def parse_url(self, url):
         #parse file id and key from url
-        if('!' in url):
+        if ('!' in url):
             match = re.findall(r'/#!(.*)', url)
             path = match[0]
             return path
@@ -152,7 +157,7 @@ class Mega(object):
             raise errors.RequestError('Url key missing')
 
     def get_user(self):
-        user_data =  self.api_request({'a': 'ug'})
+        user_data = self.api_request({'a': 'ug'})
         return user_data
 
     def delete_url(self, url):
@@ -199,7 +204,8 @@ class Mega(object):
             if i['h'] is not u'':
                 node_id = i['h']
 
-        return self.api_request({'a': 'm', 'n': node_id, 't': target_node_id, 'i': self.request_id})
+        return self.api_request({'a': 'm', 'n': node_id, 't': target_node_id,
+                                 'i': self.request_id})
 
     def get_node_by_type(self, type):
         '''
@@ -212,7 +218,7 @@ class Mega(object):
         '''
         nodes = self.get_files()
         for node in nodes.items():
-            if(node[1]['t'] == type):
+            if (node[1]['t'] == type):
                 return node
 
 
@@ -234,7 +240,9 @@ class Mega(object):
         attribs = decrypt_attr(attribs, k)
         file_name = attribs['n']
 
-        print "downloading {0} (size: {1}), url = {2}".format(attribs['n'], file_size, file_url)
+        print "downloading {0} (size: {1}), url = {2}".format(attribs['n'],
+                                                              file_size,
+                                                              file_url)
 
         input_file = requests.get(file_url, stream=True).raw
         output_file = open(file_name, 'wb')
@@ -251,7 +259,7 @@ class Mega(object):
 
             chunk_mac = [iv[0], iv[1], iv[0], iv[1]]
             for i in range(0, len(chunk), 16):
-                block = chunk[i:i+16]
+                block = chunk[i:i + 16]
                 if len(block) % 16:
                     block += '\0' * (16 - (len(block) % 16))
                 block = str_to_a32(block)
@@ -291,7 +299,7 @@ class Mega(object):
 
         #generate random aes key (128) for file
         ul_key = [random.randint(0, 0xFFFFFFFF) for r in range(6)]
-        count = Counter.new(128, initial_value=((ul_key[4] << 32) + ul_key[5]) << 64)
+        count = Counter.new(128,initial_value=((ul_key[4]<<32)+ul_key[5])<<64)
         aes = AES.new(a32_to_str(ul_key[:4]), AES.MODE_CTR, counter=count)
 
         file_mac = [0, 0, 0, 0]
@@ -301,22 +309,25 @@ class Mega(object):
             #determine chunks mac
             chunk_mac = [ul_key[4], ul_key[5], ul_key[4], ul_key[5]]
             for i in range(0, len(chunk), 16):
-                block = chunk[i:i+16]
+                block = chunk[i:i + 16]
                 if len(block) % 16:
                     block += '\0' * (16 - len(block) % 16)
                 block = str_to_a32(block)
-                chunk_mac = [chunk_mac[0] ^ block[0], chunk_mac[1] ^ block[1], chunk_mac[2] ^ block[2],
+                chunk_mac = [chunk_mac[0] ^ block[0], chunk_mac[1] ^ block[1],
+                             chunk_mac[2] ^ block[2],
                              chunk_mac[3] ^ block[3]]
                 chunk_mac = aes_cbc_encrypt_a32(chunk_mac, ul_key[:4])
 
             #our files mac
-            file_mac = [file_mac[0] ^ chunk_mac[0], file_mac[1] ^ chunk_mac[1], file_mac[2] ^ chunk_mac[2],
+            file_mac = [file_mac[0] ^ chunk_mac[0], file_mac[1] ^ chunk_mac[1],
+                        file_mac[2] ^ chunk_mac[2],
                         file_mac[3] ^ chunk_mac[3]]
             file_mac = aes_cbc_encrypt_a32(file_mac, ul_key[:4])
 
             #encrypt file and upload
             chunk = aes.encrypt(chunk)
-            output_file = requests.post(ul_url + "/" + str(chunk_start), data=chunk, timeout=self.timeout)
+            output_file = requests.post(ul_url + "/" + str(chunk_start),
+                                        data=chunk, timeout=self.timeout)
             completion_file_handle = output_file.text
 
         #determine meta mac
@@ -324,14 +335,16 @@ class Mega(object):
 
         attribs = {'n': os.path.basename(filename)}
         encrypt_attribs = base64_url_encode(encrypt_attr(attribs, ul_key[:4]))
-        key = [ul_key[0] ^ ul_key[4], ul_key[1] ^ ul_key[5], ul_key[2] ^ meta_mac[0], ul_key[3] ^ meta_mac[1],
+        key = [ul_key[0] ^ ul_key[4], ul_key[1] ^ ul_key[5],
+               ul_key[2] ^ meta_mac[0], ul_key[3] ^ meta_mac[1],
                ul_key[4], ul_key[5], meta_mac[0], meta_mac[1]]
         encrypted_key = a32_to_base64(encrypt_key(key, self.master_key))
         #update attributes
-        data = self.api_request({'a': 'p', 't': dest, 'n': [
-            {'h': completion_file_handle, 't': 0, 'a': encrypt_attribs, 'k': encrypted_key}]}
-        )
-
+        data = self.api_request({'a': 'p', 't': dest, 'n': [{
+                                'h': completion_file_handle,
+                                't': 0,
+                                'a': encrypt_attribs,
+                                'k': encrypted_key}]})
         #close input file and return API msg
         input_file.close()
         return data
@@ -344,7 +357,8 @@ class Mega(object):
             key = file['k'][file['k'].index(':') + 1:]
             key = decrypt_key(base64_to_a32(key), self.master_key)
             if file['t'] == 0:
-                k = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6], key[3] ^ key[7])
+                k = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6],
+                     key[3] ^ key[7])
                 file['iv'] = key[4:6] + (0, 0)
                 file['meta_mac'] = key[6:8]
             else:
