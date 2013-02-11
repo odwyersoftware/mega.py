@@ -33,10 +33,11 @@ This is a work in progress, further functionality coming shortly.
     file = m.upload('myfile.doc')
     m.get_upload_link(file)
 
-### Download a file from URL or file obj
+### Download a file from URL or file obj, optionally specify destination fold
     file = m.find('myfile.doc')
     m.download(file)
     m.download_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
+    m.download(file, '/home/john-smith/Desktop')
 
 ### Search account for a file, and get its public link
     file = m.find('myfile.doc')

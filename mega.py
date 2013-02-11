@@ -131,21 +131,21 @@ class Mega(object):
         else:
             raise errors.ValidationError('File id and key must be present')
 
-    def download_url(self, url):
+    def download_url(self, url, dest_path=None):
         '''
         Download a file by it's public url
         '''
         path = self.parse_url(url).split('!')
         file_id = path[0]
         file_key = path[1]
-        self.download_file(file_id, file_key, is_public=True)
+        self.download_file(file_id, file_key, dest_path, is_public=True)
 
-    def download(self, file):
+    def download(self, file, dest_path=None):
         '''
         Download a file by it's file object
         '''
         url = self.get_link(file)
-        self.download_url(url)
+        self.download_url(url, dest_path)
 
     def parse_url(self, url):
         #parse file id and key from url
@@ -222,7 +222,7 @@ class Mega(object):
                 return node
 
 
-    def download_file(self, file_handle, file_key, is_public=False):
+    def download_file(self, file_handle, file_key, dest_path=None, is_public=False):
         if is_public:
             file_key = base64_to_a32(file_key)
             file_data = self.api_request({'a': 'g', 'g': 1, 'p': file_handle})
@@ -245,7 +245,11 @@ class Mega(object):
                                                               file_url)
 
         input_file = requests.get(file_url, stream=True).raw
-        output_file = open(file_name, 'wb')
+
+        if dest_path:
+            output_file = open(dest_path + '/' + file_name, 'wb')
+        else:
+            output_file = open(file_name, 'wb')
 
         counter = Counter.new(
             128, initial_value=((iv[0] << 32) + iv[1]) << 64)
