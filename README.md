@@ -14,10 +14,8 @@ This is a work in progress, further functionality coming shortly.
 
 ### Install mega.py package
 
-    - Download the source code
-    - Open the terminal in the source folder
-    - Run the following command
-    sudo python setup.py install
+    #Run the following command
+    sudo pip install mega.py
 
 ### Import mega.py
 
