@@ -12,6 +12,17 @@ This is a work in progress, further functionality coming shortly.
 
 ## How To Use
 
+### Install mega.py package
+
+    - Download the source code
+    - Open the terminal in the source folder
+    - Run the following command
+    sudo python setup.py install
+
+### Import mega.py
+
+    from mega import Mega
+
 ### Create an instance of Mega.py
 
     mega = Mega()
@@ -60,7 +71,7 @@ This is a work in progress, further functionality coming shortly.
 
 ## Tests
 
-    Test .py files can be found in /tests, run these to ensure Mega.py is working 100%.
+    Test .py files can be found in tests.py, run these to ensure Mega.py is working 100%.
 
 ## Contribute
 

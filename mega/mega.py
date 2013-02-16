@@ -7,8 +7,8 @@ import os
 import random
 import binascii
 import requests
-import errors
-from crypto import *
+from .errors import ValidationError,RequestError
+from .crypto import *
 
 
 class Mega(object):
@@ -32,7 +32,7 @@ class Mega(object):
         resp = self.api_request({'a': 'us', 'user': email, 'uh': uh})
         #if numeric error code response
         if isinstance(resp, int):
-            raise errors.RequestError(resp)
+            raise RequestError(resp)
         self._login_process(resp, password_aes)
 
     def _login_process(self, resp, password):
@@ -82,7 +82,7 @@ class Mega(object):
 
         #if numeric error code response
         if isinstance(json_resp, int):
-            raise errors.RequestError(json_resp)
+            raise RequestError(json_resp)
         return json_resp[0]
 
     def get_files(self):
@@ -129,7 +129,7 @@ class Mega(object):
                                                 public_handle,
                                                 decrypted_key)
         else:
-            raise errors.ValidationError('File id and key must be present')
+            raise ValidationError('File id and key must be present')
 
     def download_url(self, url, dest_path=None):
         '''
@@ -154,7 +154,7 @@ class Mega(object):
             path = match[0]
             return path
         else:
-            raise errors.RequestError('Url key missing')
+            raise RequestError('Url key missing')
 
     def get_user(self):
         user_data = self.api_request({'a': 'ug'})
@@ -359,6 +359,13 @@ class Mega(object):
         """
         if file['t'] == 0 or file['t'] == 1:
             key = file['k'][file['k'].index(':') + 1:]
+            #fix for shared folder key format {k: foo1:bar1/foo2:bar2 }
+            uid = file['u']
+            keys = file['k'].split('/')
+            regex = re.compile('^%s:.*$' % uid)
+            for keytmp in keys:
+                if regex.match(keytmp):
+                    key = keytmp[keytmp.index(':') + 1:]
             key = decrypt_key(base64_to_a32(key), self.master_key)
             if file['t'] == 0:
                 k = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6],

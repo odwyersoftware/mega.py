@@ -1,6 +1,5 @@
 from mega import Mega
 
-
 def test():
     #user details
     email = 'your@email.com'
@@ -23,11 +22,11 @@ def test():
             print files[file]
 
     ##upload file
-    print(m.upload('test.py'))
+    print(m.upload('tests.py'))
 
     ##get file's public link
     #NOTE: if passing upload() function response use get_upload_link()
-    file = m.find('test.py')
+    file = m.find('tests.py')
     #print(m.get_upload_link(file))
     print(m.get_link(file))
 
@@ -42,7 +41,7 @@ def test():
         print(m.delete(file[1]['k']))
 
     ##download file
-    #file = m.find('test.py')
+    #file = m.find('tests.py')
     #m.download(file)
     ##specify destination folder
     #m.download(file, '/home/user_name/Desktop')
