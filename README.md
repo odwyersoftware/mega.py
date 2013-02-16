@@ -14,7 +14,7 @@ This is a work in progress, further functionality coming shortly.
 
 ### Install mega.py package
 
-    #Run the following command
+    #Run the following command, or run setup from the latest github source
     sudo pip install mega.py
 
 ### Import mega.py
