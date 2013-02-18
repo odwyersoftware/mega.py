@@ -18,8 +18,7 @@ def test():
     files = m.get_files()
     #example iterate over files
     for file in files:
-        if files[file]['a'] != False:
-            print files[file]
+        print files[file]
 
     ##upload file
     print(m.upload('tests.py'))

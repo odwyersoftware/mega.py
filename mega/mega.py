@@ -92,7 +92,10 @@ class Mega(object):
         files = self.api_request({'a': 'f', 'c': 1})
         files_dict = {}
         for file in files['f']:
-            files_dict[file['h']] = self.process_file(file)
+            processed_file = self.process_file(file)
+            #ensure each file has a name before returning
+            if processed_file['a']:
+                files_dict[file['h']] = processed_file
         return files_dict
 
     def get_upload_link(self, file):
