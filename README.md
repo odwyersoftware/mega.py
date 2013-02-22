@@ -64,7 +64,7 @@ This is a work in progress, further functionality coming shortly.
 ## Requirements
 
     1. Python2.7+
-    2. Python requests - python-requests.org
+    2. Python requests (>0.10) - python-requests.org 
     3. PyCrypto - dlitz.net/software/pycrypto/
 
 ## Tests
