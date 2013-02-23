@@ -73,10 +73,15 @@ class Mega(object):
 
         if self.sid:
             params.update({'sid': self.sid})
+
+        #ensure input data is a list
+        if not isinstance(data, list):
+            data = [data]
+
         req = requests.post(
             '{0}://g.api.{1}/cs'.format(self.schema, self.domain),
                                         params=params,
-                                        data=json.dumps([data]),
+                                        data=json.dumps(data),
                                         timeout=self.timeout)
         json_resp = json.loads(req.text)
 
@@ -85,6 +90,61 @@ class Mega(object):
             raise RequestError(json_resp)
         return json_resp[0]
 
+    def parse_url(self, url):
+        #parse file id and key from url
+        if ('!' in url):
+            match = re.findall(r'/#!(.*)', url)
+            path = match[0]
+            return path
+        else:
+            raise RequestError('Url key missing')
+
+    def process_file(self, file):
+        """
+        Process a file...
+        """
+        if file['t'] == 0 or file['t'] == 1:
+            key = file['k'][file['k'].index(':') + 1:]
+            #fix for shared folder key format {k: foo1:bar1/foo2:bar2 }
+            uid = file['u']
+            keys = file['k'].split('/')
+            regex = re.compile('^%s:.*$' % uid)
+            for keytmp in keys:
+                if regex.match(keytmp):
+                    key = keytmp[keytmp.index(':') + 1:]
+            key = decrypt_key(base64_to_a32(key), self.master_key)
+            if file['t'] == 0:
+                k = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6],
+                     key[3] ^ key[7])
+                file['iv'] = key[4:6] + (0, 0)
+                file['meta_mac'] = key[6:8]
+            else:
+                k = file['k'] = key
+            attributes = base64_url_decode(file['a'])
+            attributes = decrypt_attr(attributes, k)
+            file['a'] = attributes
+        elif file['t'] == 2:
+            self.root_id = file['h']
+            file['a'] = {'n': 'Cloud Drive'}
+        elif file['t'] == 3:
+            self.inbox_id = file['h']
+            file['a'] = {'n': 'Inbox'}
+        elif file['t'] == 4:
+            self.trashbin_id = file['h']
+            file['a'] = {'n': 'Rubbish Bin'}
+        return file
+
+    def find(self, filename):
+        '''
+        Return file object from given filename
+        '''
+        files = self.get_files()
+        for file in files.items():
+            if file[1]['a'] and file[1]['a']['n'] == filename:
+                return file
+
+    ##########################################################################
+    # GET
     def get_files(self):
         '''
         Get all files in account
@@ -134,34 +194,53 @@ class Mega(object):
         else:
             raise ValidationError('File id and key must be present')
 
-    def download_url(self, url, dest_path=None):
-        '''
-        Download a file by it's public url
-        '''
-        path = self.parse_url(url).split('!')
-        file_id = path[0]
-        file_key = path[1]
-        self.download_file(file_id, file_key, dest_path, is_public=True)
-
-    def download(self, file, dest_path=None):
-        '''
-        Download a file by it's file object
-        '''
-        url = self.get_link(file)
-        self.download_url(url, dest_path)
-
-    def parse_url(self, url):
-        #parse file id and key from url
-        if ('!' in url):
-            match = re.findall(r'/#!(.*)', url)
-            path = match[0]
-            return path
-        else:
-            raise RequestError('Url key missing')
-
     def get_user(self):
         user_data = self.api_request({'a': 'ug'})
         return user_data
+
+    def get_node_by_type(self, type):
+        '''
+        Get a node by it's numeric type id, e.g:
+        0: file
+        1: dir
+        2: special: root cloud drive
+        3: special: inbox
+        4: special trash bin
+        '''
+        nodes = self.get_files()
+        for node in nodes.items():
+            if (node[1]['t'] == type):
+                return node
+
+    def get_files_in_node(self, target):
+        '''
+        Get all files in a given target, e.g. 4=trash
+        '''
+        node_id = self.get_node_by_type(target)
+        files = self.api_request({'a': 'f', 'c': 1})
+        files_dict = {}
+        for file in files['f']:
+            processed_file = self.process_file(file)
+            if processed_file['a'] and processed_file['p'] == node_id[0]:
+                files_dict[file['h']] = processed_file
+        return files_dict
+
+    def get_id_from_public_handle(self, public_handle):
+        #get node data
+        node_data = self.api_request({'a': 'f', 'f': 1, 'p': public_handle})
+        node_id = None
+
+        #determine node id
+        for i in node_data['f']:
+            if i['h'] is not u'':
+                node_id = i['h']
+        return node_id
+
+    ##########################################################################
+    # DELETE
+    def delete(self, public_handle):
+        #straight delete by id
+        return self.move(public_handle, 4)
 
     def delete_url(self, url):
         #delete a file via it's url
@@ -169,18 +248,17 @@ class Mega(object):
         public_handle = path[0]
         return self.move(public_handle, 4)
 
-    def delete(self, public_handle):
-        #straight delete by id
-        return self.move(public_handle, 4)
-
-    def find(self, filename):
-        '''
-        Return file object from given filename
-        '''
-        files = self.get_files()
-        for file in files.items():
-            if file[1]['a'] and file[1]['a']['n'] == filename:
-                return file
+    def destroy(self, file_id):
+        #delete forever by private id
+        return self.api_request({'a': 'd',
+                                 'n': file_id,
+                                 'i': self.request_id})
+    def destroy_url(self, url):
+        #delete a file via it's url
+        path = self.parse_url(url).split('!')
+        public_handle = path[0]
+        file_id = self.get_id_from_public_handle(public_handle)
+        return self.destroy(file_id)
 
     def move(self, public_handle, target):
         #TODO node_id improvements
@@ -210,20 +288,37 @@ class Mega(object):
         return self.api_request({'a': 'm', 'n': node_id, 't': target_node_id,
                                  'i': self.request_id})
 
-    def get_node_by_type(self, type):
-        '''
-        Get a node by it's numeric type id, e.g:
-        0: file
-        1: dir
-        2: special: root cloud drive
-        3: special: inbox
-        4: special trash bin
-        '''
-        nodes = self.get_files()
-        for node in nodes.items():
-            if (node[1]['t'] == type):
-                return node
 
+    def empty_trash(self):
+        # get list of files in rubbish out
+        files = self.get_files_in_node(4)
+
+        # make a list of json
+        if files != {}:
+            post_list = []
+            for file in files:
+                post_list.append({"a": "d",
+                                  "n": file,
+                                  "i": self.request_id})
+            return self.api_request(post_list)
+
+    ##########################################################################
+    # DOWNLOAD
+    def download(self, file, dest_path=None):
+        '''
+        Download a file by it's file object
+        '''
+        url = self.get_link(file)
+        self.download_url(url, dest_path)
+
+    def download_url(self, url, dest_path=None):
+        '''
+        Download a file by it's public url
+        '''
+        path = self.parse_url(url).split('!')
+        file_id = path[0]
+        file_key = path[1]
+        self.download_file(file_id, file_key, dest_path, is_public=True)
 
     def download_file(self, file_handle, file_key, dest_path=None, is_public=False):
         if is_public:
@@ -243,9 +338,9 @@ class Mega(object):
         attribs = decrypt_attr(attribs, k)
         file_name = attribs['n']
 
-        print "downloading {0} (size: {1}), url = {2}".format(attribs['n'].encode("utf8"),
+        print("downloading {0} (size: {1}), url = {2}".format(attribs['n'].encode("utf8"),
                                                               file_size,
-                                                              file_url)
+                                                              file_url))
 
         input_file = requests.get(file_url, stream=True).raw
 
@@ -289,6 +384,8 @@ class Mega(object):
         if (file_mac[0] ^ file_mac[1], file_mac[2] ^ file_mac[3]) != meta_mac:
             raise ValueError('Mismatched mac')
 
+    ##########################################################################
+    # UPLOAD
     def upload(self, filename, dest=None):
         #determine storage node
         if dest is None:
@@ -355,38 +452,3 @@ class Mega(object):
         #close input file and return API msg
         input_file.close()
         return data
-
-    def process_file(self, file):
-        """
-        Process a file...
-        """
-        if file['t'] == 0 or file['t'] == 1:
-            key = file['k'][file['k'].index(':') + 1:]
-            #fix for shared folder key format {k: foo1:bar1/foo2:bar2 }
-            uid = file['u']
-            keys = file['k'].split('/')
-            regex = re.compile('^%s:.*$' % uid)
-            for keytmp in keys:
-                if regex.match(keytmp):
-                    key = keytmp[keytmp.index(':') + 1:]
-            key = decrypt_key(base64_to_a32(key), self.master_key)
-            if file['t'] == 0:
-                k = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6],
-                     key[3] ^ key[7])
-                file['iv'] = key[4:6] + (0, 0)
-                file['meta_mac'] = key[6:8]
-            else:
-                k = file['k'] = key
-            attributes = base64_url_decode(file['a'])
-            attributes = decrypt_attr(attributes, k)
-            file['a'] = attributes
-        elif file['t'] == 2:
-            self.root_id = file['h']
-            file['a'] = {'n': 'Cloud Drive'}
-        elif file['t'] == 3:
-            self.inbox_id = file['h']
-            file['a'] = {'n': 'Inbox'}
-        elif file['t'] == 4:
-            self.trashbin_id = file['h']
-            file['a'] = {'n': 'Rubbish Bin'}
-        return file

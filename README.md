@@ -52,10 +52,13 @@ This is a work in progress, further functionality coming shortly.
     file = m.find('myfile.doc')
     m.get_link(file)
 
-### Trash a file from URL, it's ID, or from search
+### Trash or destroy a file from URL, it's ID, or from search
 
     m.delete('utYjgSTQ')
     m.delete_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
+
+    m.destroy('utYjgSTQ')
+    m.destroy_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
 
     files = m.find('myfile.doc')
     if files:
@@ -64,7 +67,7 @@ This is a work in progress, further functionality coming shortly.
 ## Requirements
 
     1. Python2.7+
-    2. Python requests (>0.10) - python-requests.org 
+    2. Python requests (>0.10) - python-requests.org
     3. PyCrypto - dlitz.net/software/pycrypto/
 
 ## Tests
