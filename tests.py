@@ -19,7 +19,7 @@ def test():
 
     #example iterate over files
     for file in files:
-        print files[file]
+        print(files[file])
 
     #upload file
     print(m.upload('tests.py'))
