@@ -134,6 +134,8 @@ class Mega(object):
             file['a'] = {'n': 'Rubbish Bin'}
         return file
 
+    ##########################################################################
+    # GET
     def find(self, filename):
         '''
         Return file object from given filename
@@ -143,8 +145,6 @@ class Mega(object):
             if file[1]['a'] and file[1]['a']['n'] == filename:
                 return file
 
-    ##########################################################################
-    # GET
     def get_files(self):
         '''
         Get all files in account
