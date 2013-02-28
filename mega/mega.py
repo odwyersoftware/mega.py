@@ -38,6 +38,7 @@ class Mega(object):
     def _login_process(self, resp, password):
         encrypted_master_key = base64_to_a32(resp['k'])
         self.master_key = decrypt_key(encrypted_master_key, password)
+        self.users_keys = dict()
         if 'tsid' in resp:
             tsid = base64_url_decode(resp['tsid'])
             key_encrypted = a32_to_str(
