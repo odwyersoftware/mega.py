@@ -101,28 +101,69 @@ class Mega(object):
 
     def process_file(self, file):
         """
-        Process a file...
+        Process a file
         """
         if file['t'] == 0 or file['t'] == 1:
-            key = file['k'][file['k'].index(':') + 1:]
-            #fix for shared folder key format {k: foo1:bar1/foo2:bar2 }
             uid = file['u']
             keys = file['k'].split('/')
             regex = re.compile('^%s:.*$' % uid)
+            key = None
             for keytmp in keys:
                 if regex.match(keytmp):
                     key = keytmp[keytmp.index(':') + 1:]
-            key = decrypt_key(base64_to_a32(key), self.master_key)
-            if file['t'] == 0:
-                k = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6],
-                     key[3] ^ key[7])
-                file['iv'] = key[4:6] + (0, 0)
-                file['meta_mac'] = key[6:8]
-            else:
-                k = file['k'] = key
-            attributes = base64_url_decode(file['a'])
-            attributes = decrypt_attr(attributes, k)
-            file['a'] = attributes
+                    break
+
+            # my objects
+            if key:
+                key = decrypt_key(base64_to_a32(key), self.master_key)
+                # file
+                if file['t'] == 0:
+                    k = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6],
+                         key[3] ^ key[7])
+                    file['iv'] = key[4:6] + (0, 0)
+                    file['meta_mac'] = key[6:8]
+                # folder
+                else:
+                    k = key
+                attributes = base64_url_decode(file['a'])
+                attributes = decrypt_attr(attributes, k)
+                file['a'] = attributes
+            # shared folders
+            elif 'su' in file and 'sk' in file and ':' in file['k']:
+                user_key = decrypt_key(base64_to_a32(file['sk']),
+                                       self.master_key)
+                key = decrypt_key(base64_to_a32(file['k'].split(':')[1]),
+                                                user_key)
+                # save user_key to decrypt shared files
+                self.users_keys[file['su']] = user_key
+                if file['t'] == 0:
+                    k = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6],
+                         key[3] ^ key[7])
+                    file['iv'] = key[4:6] + (0, 0)
+                    file['meta_mac'] = key[6:8]
+                else:
+                    k = key
+                attributes = base64_url_decode(file['a'])
+                attributes = decrypt_attr(attributes, k)
+                file['a'] = attributes
+            # shared files
+            elif file['u'] and ':' in file['k']:
+                user_key = self.users_keys[file['u']]
+                key = decrypt_key(base64_to_a32(file['k'].split(':')[1]),
+                                  user_key)
+                if file['t'] == 0:
+                    k = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6],
+                         key[3] ^ key[7])
+                    file['iv'] = key[4:6] + (0, 0)
+                    file['meta_mac'] = key[6:8]
+                else:
+                    k = key
+                attributes = base64_url_decode(file['a'])
+                attributes = decrypt_attr(attributes, k)
+                file['a'] = attributes
+            # other => wrong object
+            elif file['k'] == '':
+                file['a'] = False
         elif file['t'] == 2:
             self.root_id = file['h']
             file['a'] = {'n': 'Cloud Drive'}
