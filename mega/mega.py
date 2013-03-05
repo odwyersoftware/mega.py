@@ -269,6 +269,7 @@ class Mega(object):
 
     def get_id_from_public_handle(self, public_handle):
         #get node data
+        #TODO fix this function
         node_data = self.api_request({'a': 'f', 'f': 1, 'p': public_handle})
         node_id = None
 
@@ -288,7 +289,8 @@ class Mega(object):
         #delete a file via it's url
         path = self.parse_url(url).split('!')
         public_handle = path[0]
-        return self.move(public_handle, 4)
+        file_id = self.get_id_from_public_handle(public_handle)
+        return self.move(file_id, 4)
 
     def destroy(self, file_id):
         #delete forever by private id
@@ -302,8 +304,7 @@ class Mega(object):
         file_id = self.get_id_from_public_handle(public_handle)
         return self.destroy(file_id)
 
-    def move(self, public_handle, target):
-        #TODO node_id improvements
+    def move(self, file_id, target):
         '''
         Move a file to another parent node
         params:
@@ -317,17 +318,12 @@ class Mega(object):
         3 : inbox
         4 : trash
         '''
-        #get node data
-        node_data = self.api_request({'a': 'f', 'f': 1, 'p': public_handle})
+
+        #determine target_node_id
         target_node_id = str(self.get_node_by_type(target)[0])
-        node_id = None
-
-        #determine node id
-        for i in node_data['f']:
-            if i['h'] is not u'':
-                node_id = i['h']
-
-        return self.api_request({'a': 'm', 'n': node_id, 't': target_node_id,
+        return self.api_request({'a': 'm',
+                                 'n': file_id,
+                                 't': target_node_id,
                                  'i': self.request_id})
 
 

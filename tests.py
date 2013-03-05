@@ -37,8 +37,8 @@ def test():
         #m.download_url(link)
 
         #delete or destroy file. by id or url
-        print(m.delete(file[1]['k']))
-        #print(m.destroy(file[1]['h']))
+        print(m.delete(file[0]))
+        #print(m.destroy(file[0]))
         #print(m.delete_url(link))
         #print(m.destroy_url(link))
 

@@ -52,17 +52,17 @@ This is a work in progress, further functionality coming shortly.
     file = m.find('myfile.doc')
     m.get_link(file)
 
-### Trash or destroy a file from URL, it's ID, or from search
+### Trash or destroy a file from URL or its ID
 
-    m.delete('utYjgSTQ')
+    m.delete(file[0])
     m.delete_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
 
-    m.destroy('utYjgSTQ')
+    m.destroy(file[0])
     m.destroy_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
 
     files = m.find('myfile.doc')
     if files:
-        m.delete(files[1]['k'])
+        m.delete(files[0])
 
 ## Requirements
 
