@@ -13,47 +13,49 @@ This is a work in progress, further functionality coming shortly.
 ## How To Use
 
 ### Install mega.py package
-
+'''python
     #Run the following command, or run setup from the latest github source
     sudo pip install mega.py
-
+'''
 ### Import mega.py
-
+'''python
     from mega import Mega
-
+'''
 ### Create an instance of Mega.py
-
+'''python
     mega = Mega()
-
+'''
 ### Login to Mega
-
+'''python
     m = mega.login(email, password)
-
+'''
 ### Get user details
-
+'''python
     details = m.get_user()
-
+'''
 ### Get account files
-
+'''python
     files = m.get_files()
-
+'''
 ### Upload a file, and get its public link
-
+'''python
     file = m.upload('myfile.doc')
     m.get_upload_link(file)
-
+'''
 ### Download a file from URL or file obj, optionally specify destination folder
+'''python
     file = m.find('myfile.doc')
     m.download(file)
     m.download_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
     m.download(file, '/home/john-smith/Desktop')
-
+'''
 ### Search account for a file, and get its public link
+'''python
     file = m.find('myfile.doc')
     m.get_link(file)
-
+'''
 ### Trash or destroy a file from URL or its ID
-
+'''python
     m.delete(file[0])
     m.delete_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
 
@@ -63,7 +65,7 @@ This is a work in progress, further functionality coming shortly.
     files = m.find('myfile.doc')
     if files:
         m.delete(files[0])
-
+'''
 ## Requirements
 
     1. Python2.7+
