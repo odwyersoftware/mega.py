@@ -35,7 +35,7 @@ details = m.get_user()
 ```
 ### Get account files
 ```python
-    files = m.get_files()
+files = m.get_files()
 ```
 ### Upload a file, and get its public link
 ```python
