@@ -279,6 +279,22 @@ class Mega(object):
                 node_id = i['h']
         return node_id
 
+    def get_quota(self):
+        '''
+        Get current remaining disk quota in MegaBytes
+        '''
+        json_resp = self.api_request({'a': 'uq', 'xfer': 1})
+        #convert bytes to megabyes
+        return json_resp['mstrg']/1048576
+
+    def get_balance(self):
+        '''
+        Get account monetary balance, Pro accounts only
+        '''
+        user_data = self.api_request({"a":"uq","pro":1})
+        if 'balance' in user_data:
+            return user_data['balance']
+
     ##########################################################################
     # DELETE
     def delete(self, public_handle):

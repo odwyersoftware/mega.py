@@ -2,8 +2,8 @@ from mega import Mega
 
 def test():
     #user details
-    email = 'your@email.com'
-    password = 'password'
+    email = 'richard@richard.do'
+    password = 'fofput2'
 
     mega = Mega()
 
@@ -17,6 +17,9 @@ def test():
     #get account files
     files = m.get_files()
 
+    #get account disk quota in MB
+    print(m.get_quota())
+
     #example iterate over files
     for file in files:
         print(files[file])
@@ -26,6 +29,7 @@ def test():
 
     #search for a file in account
     file = m.find('tests.py')
+
 
     if file:
         #get public link
