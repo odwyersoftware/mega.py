@@ -273,7 +273,7 @@ class Mega(object):
         node_data = self.api_request({'a': 'f', 'f': 1, 'p': public_handle})
         node_id = None
 
-        #determine node id
+        #determine node id 
         for i in node_data['f']:
             if i['h'] is not u'':
                 node_id = i['h']
