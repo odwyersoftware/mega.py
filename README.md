@@ -33,6 +33,14 @@ m = mega.login(email, password)
 ```python
 details = m.get_user()
 ```
+### Get account balance (Pro accounts only)
+```python
+balance = m.get_balance()
+```
+### Get account disk quota
+```python
+quota = m.get_quota()
+```
 ### Get account files
 ```python
 files = m.get_files()
