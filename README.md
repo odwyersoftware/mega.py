@@ -57,6 +57,10 @@ m.download(file)
 m.download_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
 m.download(file, '/home/john-smith/Desktop')
 ```
+### Create a folder
+```python
+m.create_folder('new_folder')
+```
 ### Search account for a file, and get its public link
 ```python
 file = m.find('myfile.doc')
@@ -91,8 +95,5 @@ if files:
     Learn about the API at Mega.co.nz, more documentation coming shortly.
     - https://mega.co.nz/#developers
 
-
-
-Thanks to http://julien-marchand.com/blog/contact for examples
 
 
