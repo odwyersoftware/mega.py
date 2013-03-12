@@ -533,10 +533,5 @@ class Mega(object):
                                      'k': encrypted_key}
                                  ],
                                  'i': self.request_id})
-
-        #update files_dict
-        del self.files_dict
-        self.get_files()
-
         #return API msg
         return data
