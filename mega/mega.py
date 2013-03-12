@@ -531,7 +531,8 @@ class Mega(object):
                                      't': 1,
                                      'a': encrypt_attribs,
                                      'k': encrypted_key}
-                                 ]})
+                                 ],
+                                 'i': self.request_id})
 
         #update files_dict
         del self.files_dict
