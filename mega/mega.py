@@ -506,3 +506,36 @@ class Mega(object):
         #close input file and return API msg
         input_file.close()
         return data
+
+    def create_folder(self, name, dest=None):
+        #determine storage node
+        if dest is None:
+            #if none set, upload to cloud drive node
+            if not hasattr(self, 'root_id'):
+                self.get_files()
+            dest = self.root_id
+
+        #generate random aes key (128) for folder
+        ul_key = [random.randint(0, 0xFFFFFFFF) for r in range(6)]
+
+        #encrypt attribs
+        attribs = {'n': name}
+        encrypt_attribs = base64_url_encode(encrypt_attr(attribs, ul_key[:4]))
+        encrypted_key = a32_to_base64(encrypt_key(ul_key[:4], self.master_key))
+
+        #update attributes
+        data = self.api_request({'a': 'p',
+                                 't': dest,
+                                 'n': [{
+                                     'h': 'xxxxxxxx',
+                                     't': 1,
+                                     'a': encrypt_attribs,
+                                     'k': encrypted_key}
+                                 ]})
+
+        #update files_dict
+        del self.files_dict
+        self.get_files()
+
+        #return API msg
+        return data
