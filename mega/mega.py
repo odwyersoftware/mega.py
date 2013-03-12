@@ -444,9 +444,7 @@ class Mega(object):
         #determine storage node
         if dest is None:
             #if none set, upload to cloud drive node
-            if hasattr(self, 'root_id'):
-                root_id = getattr(self, 'root_id')
-            else:
+            if not hasattr(self, 'root_id'):
                 self.get_files()
             dest = self.root_id
 
