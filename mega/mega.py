@@ -38,7 +38,6 @@ class Mega(object):
     def _login_process(self, resp, password):
         encrypted_master_key = base64_to_a32(resp['k'])
         self.master_key = decrypt_key(encrypted_master_key, password)
-        self.users_keys = dict()
         if 'tsid' in resp:
             tsid = base64_url_decode(resp['tsid'])
             key_encrypted = a32_to_str(
@@ -100,23 +99,33 @@ class Mega(object):
         else:
             raise RequestError('Url key missing')
 
-    def process_file(self, file):
+    def process_file(self, file, shared_keys):
         """
         Process a file
         """
         if file['t'] == 0 or file['t'] == 1:
+            keys = dict(keypart.split(':',1) for keypart in file['k'].split('/'))
             uid = file['u']
-            keys = file['k'].split('/')
-            regex = re.compile('^%s:.*$' % uid)
             key = None
-            for keytmp in keys:
-                if regex.match(keytmp):
-                    key = keytmp[keytmp.index(':') + 1:]
-                    break
-
             # my objects
-            if key:
-                key = decrypt_key(base64_to_a32(key), self.master_key)
+            if uid in keys :
+                key = decrypt_key(base64_to_a32( keys[uid] ), self.master_key)
+            # shared folders 
+            elif 'su' in file and 'sk' in file and ':' in file['k']:
+                shared_key = decrypt_key(base64_to_a32(file['sk']),self.master_key)
+                key = decrypt_key(base64_to_a32(keys[file['h']]),shared_key)
+                if file['su'] not in shared_keys :
+                    shared_keys[file['su']] = {}
+                shared_keys[file['su']][file['h']] = shared_key
+            # shared files
+            elif file['u'] and file['u'] in shared_keys :
+                for hkey in shared_keys[file['u']] :
+                    shared_key = shared_keys[file['u']][hkey]
+                    if hkey in keys :
+                        key = keys[hkey]
+                        key = decrypt_key(base64_to_a32(key),shared_key)
+                        break
+            if key is not None :
                 # file
                 if file['t'] == 0:
                     k = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6],
@@ -124,39 +133,6 @@ class Mega(object):
                     file['iv'] = key[4:6] + (0, 0)
                     file['meta_mac'] = key[6:8]
                 # folder
-                else:
-                    k = key
-                attributes = base64_url_decode(file['a'])
-                attributes = decrypt_attr(attributes, k)
-                file['a'] = attributes
-            # shared folders
-            elif 'su' in file and 'sk' in file and ':' in file['k']:
-                user_key = decrypt_key(base64_to_a32(file['sk']),
-                                       self.master_key)
-                key = decrypt_key(base64_to_a32(file['k'].split(':')[1]),
-                                                user_key)
-                # save user_key to decrypt shared files
-                self.users_keys[file['su']] = user_key
-                if file['t'] == 0:
-                    k = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6],
-                         key[3] ^ key[7])
-                    file['iv'] = key[4:6] + (0, 0)
-                    file['meta_mac'] = key[6:8]
-                else:
-                    k = key
-                attributes = base64_url_decode(file['a'])
-                attributes = decrypt_attr(attributes, k)
-                file['a'] = attributes
-            # shared files
-            elif file['u'] and ':' in file['k']:
-                user_key = self.users_keys[file['u']]
-                key = decrypt_key(base64_to_a32(file['k'].split(':')[1]),
-                                  user_key)
-                if file['t'] == 0:
-                    k = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6],
-                         key[3] ^ key[7])
-                    file['iv'] = key[4:6] + (0, 0)
-                    file['meta_mac'] = key[6:8]
                 else:
                     k = key
                 attributes = base64_url_decode(file['a'])
@@ -176,6 +152,24 @@ class Mega(object):
             file['a'] = {'n': 'Rubbish Bin'}
         return file
 
+    def init_shared_keys(self,files,shared_keys) :
+        '''
+        Init shared key not associated with a user.
+        It seems to happen when a folder is shared,
+        some files are exachanged and then the 
+        folder is not shared anymore.
+        Keys are stored in files['s'] and files['ok']
+        '''
+        ok_dict = {}
+        for ok_item in files['ok'] :
+            shared_key = decrypt_key(base64_to_a32(ok_item['k']),self.master_key)
+            ok_dict[ok_item['h']] = shared_key
+        for s_item in files['s'] :
+            if s_item['u'] not in shared_keys :
+                shared_keys[s_item['u']] = {}
+            if s_item['h'] in ok_dict :
+                shared_keys[s_item['u']][s_item['h']] = ok_dict[s_item['h']]
+
     ##########################################################################
     # GET
     def find(self, filename):
@@ -193,8 +187,10 @@ class Mega(object):
         '''
         files = self.api_request({'a': 'f', 'c': 1})
         files_dict = {}
+        shared_keys = {}
+        self.init_shared_keys(files,shared_keys)
         for file in files['f']:
-            processed_file = self.process_file(file)
+            processed_file = self.process_file(file,shared_keys)
             #ensure each file has a name before returning
             if processed_file['a']:
                 files_dict[file['h']] = processed_file
@@ -261,8 +257,10 @@ class Mega(object):
         node_id = self.get_node_by_type(target)
         files = self.api_request({'a': 'f', 'c': 1})
         files_dict = {}
+        shared_keys = {}
+        self.init_shared_keys(files,shared_keys)
         for file in files['f']:
-            processed_file = self.process_file(file)
+            processed_file = self.process_file(file,shared_keys)
             if processed_file['a'] and processed_file['p'] == node_id[0]:
                 files_dict[file['h']] = processed_file
         return files_dict
