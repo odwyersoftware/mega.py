@@ -7,7 +7,7 @@ import os
 import random
 import binascii
 import requests
-from .errors import ValidationError,RequestError
+from .errors import ValidationError, RequestError
 from .crypto import *
 
 
@@ -15,14 +15,14 @@ class Mega(object):
     def __init__(self):
         self.schema = 'https'
         self.domain = 'mega.co.nz'
-        self.timeout = 160 #max time (secs) to wait for resp from api requests
+        self.timeout = 160  # max time (secs) to wait for resp from api requests
         self.sid = None
         self.sequence_num = random.randint(0, 0xFFFFFFFF)
         self.request_id = make_id(10)
 
     @classmethod
-    def login(class_, email, password):
-        instance = class_()
+    def login(cls, email, password):
+        instance = cls()
         instance.login_user(email, password)
         return instance
 
@@ -53,7 +53,7 @@ class Mega(object):
             self.rsa_private_key = [0, 0, 0, 0]
 
             for i in range(4):
-                l = ((ord(private_key[0])*256+ord(private_key[1]) +7) / 8) + 2
+                l = ((ord(private_key[0]) * 256 + ord(private_key[1]) + 7) / 8) + 2
                 self.rsa_private_key[i] = mpi_to_int(private_key[:l])
                 private_key = private_key[l:]
 
@@ -80,9 +80,9 @@ class Mega(object):
 
         req = requests.post(
             '{0}://g.api.{1}/cs'.format(self.schema, self.domain),
-                                        params=params,
-                                        data=json.dumps(data),
-                                        timeout=self.timeout)
+            params=params,
+            data=json.dumps(data),
+            timeout=self.timeout)
         json_resp = json.loads(req.text)
 
         #if numeric error code response
@@ -104,28 +104,28 @@ class Mega(object):
         Process a file
         """
         if file['t'] == 0 or file['t'] == 1:
-            keys = dict(keypart.split(':',1) for keypart in file['k'].split('/'))
+            keys = dict(keypart.split(':', 1) for keypart in file['k'].split('/'))
             uid = file['u']
             key = None
             # my objects
-            if uid in keys :
-                key = decrypt_key(base64_to_a32( keys[uid] ), self.master_key)
+            if uid in keys:
+                key = decrypt_key(base64_to_a32(keys[uid]), self.master_key)
             # shared folders 
             elif 'su' in file and 'sk' in file and ':' in file['k']:
-                shared_key = decrypt_key(base64_to_a32(file['sk']),self.master_key)
-                key = decrypt_key(base64_to_a32(keys[file['h']]),shared_key)
-                if file['su'] not in shared_keys :
+                shared_key = decrypt_key(base64_to_a32(file['sk']), self.master_key)
+                key = decrypt_key(base64_to_a32(keys[file['h']]), shared_key)
+                if file['su'] not in shared_keys:
                     shared_keys[file['su']] = {}
                 shared_keys[file['su']][file['h']] = shared_key
             # shared files
-            elif file['u'] and file['u'] in shared_keys :
-                for hkey in shared_keys[file['u']] :
+            elif file['u'] and file['u'] in shared_keys:
+                for hkey in shared_keys[file['u']]:
                     shared_key = shared_keys[file['u']][hkey]
-                    if hkey in keys :
+                    if hkey in keys:
                         key = keys[hkey]
-                        key = decrypt_key(base64_to_a32(key),shared_key)
+                        key = decrypt_key(base64_to_a32(key), shared_key)
                         break
-            if key is not None :
+            if key is not None:
                 # file
                 if file['t'] == 0:
                     k = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6],
@@ -152,55 +152,55 @@ class Mega(object):
             file['a'] = {'n': 'Rubbish Bin'}
         return file
 
-    def init_shared_keys(self,files,shared_keys) :
-        '''
+    def init_shared_keys(self, files, shared_keys):
+        """
         Init shared key not associated with a user.
-        It seems to happen when a folder is shared,
-        some files are exachanged and then the 
-        folder is not shared anymore.
+        Seems to happen when a folder is shared,
+        some files are exchanged and then the
+        folder is un-shared.
         Keys are stored in files['s'] and files['ok']
-        '''
+        """
         ok_dict = {}
-        for ok_item in files['ok'] :
-            shared_key = decrypt_key(base64_to_a32(ok_item['k']),self.master_key)
+        for ok_item in files['ok']:
+            shared_key = decrypt_key(base64_to_a32(ok_item['k']), self.master_key)
             ok_dict[ok_item['h']] = shared_key
-        for s_item in files['s'] :
-            if s_item['u'] not in shared_keys :
+        for s_item in files['s']:
+            if s_item['u'] not in shared_keys:
                 shared_keys[s_item['u']] = {}
-            if s_item['h'] in ok_dict :
+            if s_item['h'] in ok_dict:
                 shared_keys[s_item['u']][s_item['h']] = ok_dict[s_item['h']]
 
     ##########################################################################
     # GET
     def find(self, filename):
-        '''
+        """
         Return file object from given filename
-        '''
+        """
         files = self.get_files()
         for file in files.items():
             if file[1]['a'] and file[1]['a']['n'] == filename:
                 return file
 
     def get_files(self):
-        '''
+        """
         Get all files in account
-        '''
+        """
         files = self.api_request({'a': 'f', 'c': 1})
         files_dict = {}
         shared_keys = {}
-        self.init_shared_keys(files,shared_keys)
+        self.init_shared_keys(files, shared_keys)
         for file in files['f']:
-            processed_file = self.process_file(file,shared_keys)
+            processed_file = self.process_file(file, shared_keys)
             #ensure each file has a name before returning
             if processed_file['a']:
                 files_dict[file['h']] = processed_file
         return files_dict
 
     def get_upload_link(self, file):
-        '''
+        """
         Get a files public link inc. decrypted key
         Requires upload() response as input
-        '''
+        """
         if 'f' in file:
             file = file['f'][0]
             public_handle = self.api_request({'a': 'l', 'n': file['h']})
@@ -216,9 +216,9 @@ class Mega(object):
                             use get_link() for regular file input''')
 
     def get_link(self, file):
-        '''
+        """
         Get a file public link from given file object
-        '''
+        """
         file = file[1]
         if 'h' in file and 'k' in file:
             public_handle = self.api_request({'a': 'l', 'n': file['h']})
@@ -237,30 +237,30 @@ class Mega(object):
         return user_data
 
     def get_node_by_type(self, type):
-        '''
+        """
         Get a node by it's numeric type id, e.g:
         0: file
         1: dir
         2: special: root cloud drive
         3: special: inbox
         4: special trash bin
-        '''
+        """
         nodes = self.get_files()
         for node in nodes.items():
             if (node[1]['t'] == type):
                 return node
 
     def get_files_in_node(self, target):
-        '''
+        """
         Get all files in a given target, e.g. 4=trash
-        '''
+        """
         node_id = self.get_node_by_type(target)
         files = self.api_request({'a': 'f', 'c': 1})
         files_dict = {}
         shared_keys = {}
-        self.init_shared_keys(files,shared_keys)
+        self.init_shared_keys(files, shared_keys)
         for file in files['f']:
-            processed_file = self.process_file(file,shared_keys)
+            processed_file = self.process_file(file, shared_keys)
             if processed_file['a'] and processed_file['p'] == node_id[0]:
                 files_dict[file['h']] = processed_file
         return files_dict
@@ -278,18 +278,18 @@ class Mega(object):
         return node_id
 
     def get_quota(self):
-        '''
+        """
         Get current remaining disk quota in MegaBytes
-        '''
+        """
         json_resp = self.api_request({'a': 'uq', 'xfer': 1})
         #convert bytes to megabyes
-        return json_resp['mstrg']/1048576
+        return json_resp['mstrg'] / 1048576
 
     def get_balance(self):
-        '''
+        """
         Get account monetary balance, Pro accounts only
-        '''
-        user_data = self.api_request({"a":"uq","pro":1})
+        """
+        user_data = self.api_request({"a": "uq", "pro": 1})
         if 'balance' in user_data:
             return user_data['balance']
 
@@ -311,6 +311,7 @@ class Mega(object):
         return self.api_request({'a': 'd',
                                  'n': file_id,
                                  'i': self.request_id})
+
     def destroy_url(self, url):
         #delete a file via it's url
         path = self.parse_url(url).split('!')
@@ -319,7 +320,7 @@ class Mega(object):
         return self.destroy(file_id)
 
     def move(self, file_id, target):
-        '''
+        """
         Move a file to another parent node
         params:
         a : command
@@ -331,7 +332,7 @@ class Mega(object):
         2 : root
         3 : inbox
         4 : trash
-        '''
+        """
 
         #determine target_node_id
         target_node_id = str(self.get_node_by_type(target)[0])
@@ -339,7 +340,6 @@ class Mega(object):
                                  'n': file_id,
                                  't': target_node_id,
                                  'i': self.request_id})
-
 
     def empty_trash(self):
         # get list of files in rubbish out
@@ -357,16 +357,16 @@ class Mega(object):
     ##########################################################################
     # DOWNLOAD
     def download(self, file, dest_path=None):
-        '''
+        """
         Download a file by it's file object
-        '''
+        """
         url = self.get_link(file)
         self.download_url(url, dest_path)
 
     def download_url(self, url, dest_path=None):
-        '''
+        """
         Download a file by it's public url
-        '''
+        """
         path = self.parse_url(url).split('!')
         file_id = path[0]
         file_key = path[1]
@@ -452,8 +452,8 @@ class Mega(object):
         ul_url = self.api_request({'a': 'u', 's': size})['p']
 
         #generate random aes key (128) for file
-        ul_key = [random.randint(0, 0xFFFFFFFF) for r in range(6)]
-        count = Counter.new(128,initial_value=((ul_key[4]<<32)+ul_key[5])<<64)
+        ul_key = [random.randint(0, 0xFFFFFFFF) for _ in range(6)]
+        count = Counter.new(128, initial_value=((ul_key[4] << 32) + ul_key[5]) << 64)
         aes = AES.new(a32_to_str(ul_key[:4]), AES.MODE_CTR, counter=count)
 
         file_mac = [0, 0, 0, 0]
@@ -512,7 +512,7 @@ class Mega(object):
             dest = self.root_id
 
         #generate random aes key (128) for folder
-        ul_key = [random.randint(0, 0xFFFFFFFF) for r in range(6)]
+        ul_key = [random.randint(0, 0xFFFFFFFF) for _ in range(6)]
 
         #encrypt attribs
         attribs = {'n': name}
