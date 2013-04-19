@@ -226,7 +226,7 @@ class Mega(object):
         file = file[1]
         if 'h' in file and 'k' in file:
             public_handle = self.api_request({'a': 'l', 'n': file['h']})
-            if public_handle == -11 :
+            if public_handle == -11:
                 raise RequestError("Can't get a public link from that file (is this a shared file?)")
             decrypted_key = a32_to_base64(file['key'])
             return '{0}://{1}/#!{2}!{3}'.format(self.schema,
@@ -380,14 +380,14 @@ class Mega(object):
             if is_public:
                 file_key = base64_to_a32(file_key)
                 file_data = self.api_request({'a': 'g', 'g': 1, 'p': file_handle})
-            else :
+            else:
                 file_data = self.api_request({'a': 'g', 'g': 1, 'n': file_handle})
 
             k = (file_key[0] ^ file_key[4], file_key[1] ^ file_key[5],
                  file_key[2] ^ file_key[6], file_key[3] ^ file_key[7])
             iv = file_key[4:6] + (0, 0)
             meta_mac = file_key[6:8]
-        else :
+        else:
             file_data = self.api_request({'a': 'g', 'g': 1, 'n': file['h']})
             k = file['k']
             iv = file['iv']
@@ -396,14 +396,14 @@ class Mega(object):
         # Seems to happens sometime... When  this occurs, files are 
         # inaccessible also in the official also in the official webapp.
         # Strangely, files can come back later.
-        if 'g' not in file_data :
+        if 'g' not in file_data:
             raise RequestError('File not accessible anymore')
         file_url = file_data['g']
         file_size = file_data['s']
         attribs = base64_url_decode(file_data['at'])
         attribs = decrypt_attr(attribs, k)
         file_name = attribs['n']
-        file_name_tmp = '.megapy-%s-%s' % (int(time.time()*1000), filename)
+        file_name_tmp = '.megapy-%s-%s' % (int(time.time() * 1000), file_name)
 
         # print("downloading {0} (size: {1}), url = {2}".format(attribs['n'].encode("utf8"),
         #                                                       file_size,

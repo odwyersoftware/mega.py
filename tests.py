@@ -1,5 +1,6 @@
 from mega import Mega
 
+
 def test():
     #user details
     email = 'your@email.com'
@@ -29,7 +30,6 @@ def test():
 
     #search for a file in account
     file = m.find('tests.py')
-
 
     if file:
         #get public link
