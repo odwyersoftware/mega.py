@@ -405,10 +405,6 @@ class Mega(object):
         file_name = attribs['n']
         file_name_tmp = '.megapy-%s-%s' % (int(time.time() * 1000), file_name)
 
-        # print("downloading {0} (size: {1}), url = {2}".format(attribs['n'].encode("utf8"),
-        #                                                       file_size,
-        #                                                       file_url))
-
         input_file = requests.get(file_url, stream=True).raw
 
         if dest_path:
