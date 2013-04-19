@@ -412,7 +412,7 @@ class Mega(object):
         input_file = requests.get(file_url, stream=True).raw
 
         if dest_path:
-            output_file = open(dest_path + '/' + file_name, 'wb')
+            output_file = open(dest_path + '/' + file_name_tmp, 'wb')
         else:
             output_file = open(file_name_tmp, 'wb')
 
