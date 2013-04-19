@@ -7,6 +7,8 @@ import os
 import random
 import binascii
 import requests
+import time
+import shutil
 from .errors import ValidationError, RequestError
 from .crypto import *
 
@@ -135,6 +137,8 @@ class Mega(object):
                 # folder
                 else:
                     k = key
+                file['key'] = key
+                file['k'] = k
                 attributes = base64_url_decode(file['a'])
                 attributes = decrypt_attr(attributes, k)
                 file['a'] = attributes
@@ -222,9 +226,9 @@ class Mega(object):
         file = file[1]
         if 'h' in file and 'k' in file:
             public_handle = self.api_request({'a': 'l', 'n': file['h']})
-            file_key = file['k'][file['k'].index(':') + 1:]
-            decrypted_key = a32_to_base64(decrypt_key(base64_to_a32(file_key),
-                                                      self.master_key))
+            if public_handle == -11 :
+                raise RequestError("Can't get a public link from that file (is this a shared file?)")
+            decrypted_key = a32_to_base64(file['key'])
             return '{0}://{1}/#!{2}!{3}'.format(self.schema,
                                                 self.domain,
                                                 public_handle,
@@ -360,8 +364,7 @@ class Mega(object):
         """
         Download a file by it's file object
         """
-        url = self.get_link(file)
-        self.download_url(url, dest_path)
+        self.download_file(None, None, file=file[1], dest_path=dest_path, is_public=False)
 
     def download_url(self, url, dest_path=None):
         """
@@ -372,34 +375,46 @@ class Mega(object):
         file_key = path[1]
         self.download_file(file_id, file_key, dest_path, is_public=True)
 
-    def download_file(self, file_handle, file_key, dest_path=None, is_public=False):
-        if is_public:
-            file_key = base64_to_a32(file_key)
-            file_data = self.api_request({'a': 'g', 'g': 1, 'p': file_handle})
-        else:
-            file_data = self.api_request({'a': 'g', 'g': 1, 'n': file_handle})
+    def download_file(self, file_handle, file_key, dest_path=None, is_public=False, file=None):
+        if file is None :
+            if is_public:
+                file_key = base64_to_a32(file_key)
+                file_data = self.api_request({'a': 'g', 'g': 1, 'p': file_handle})
+            else :
+                file_data = self.api_request({'a': 'g', 'g': 1, 'n': file_handle})
 
-        k = (file_key[0] ^ file_key[4], file_key[1] ^ file_key[5],
-             file_key[2] ^ file_key[6], file_key[3] ^ file_key[7])
-        iv = file_key[4:6] + (0, 0)
-        meta_mac = file_key[6:8]
+            k = (file_key[0] ^ file_key[4], file_key[1] ^ file_key[5],
+                 file_key[2] ^ file_key[6], file_key[3] ^ file_key[7])
+            iv = file_key[4:6] + (0, 0)
+            meta_mac = file_key[6:8]
+        else :
+            file_data = self.api_request({'a': 'g', 'g': 1, 'n': file['h']})
+            k = file['k']
+            iv = file['iv']
+            meta_mac = file['meta_mac']
 
+        # Seems to happens sometime... When  this occurs, files are 
+        # inaccessible also in the official also in the official webapp.
+        # Strangely, files can come back later.
+        if 'g' not in file_data :
+            raise RequestError('File not accessible anymore')
         file_url = file_data['g']
         file_size = file_data['s']
         attribs = base64_url_decode(file_data['at'])
         attribs = decrypt_attr(attribs, k)
         file_name = attribs['n']
+        file_name_tmp = '.megapy-%s-%s' % (int(time.time()*1000), filename)
 
-        print("downloading {0} (size: {1}), url = {2}".format(attribs['n'].encode("utf8"),
-                                                              file_size,
-                                                              file_url))
+        # print("downloading {0} (size: {1}), url = {2}".format(attribs['n'].encode("utf8"),
+        #                                                       file_size,
+        #                                                       file_url))
 
         input_file = requests.get(file_url, stream=True).raw
 
         if dest_path:
             output_file = open(dest_path + '/' + file_name, 'wb')
         else:
-            output_file = open(file_name, 'wb')
+            output_file = open(file_name_tmp, 'wb')
 
         counter = Counter.new(
             128, initial_value=((iv[0] << 32) + iv[1]) << 64)
@@ -435,6 +450,8 @@ class Mega(object):
         # check mac integrity
         if (file_mac[0] ^ file_mac[1], file_mac[2] ^ file_mac[3]) != meta_mac:
             raise ValueError('Mismatched mac')
+
+        shutil.move(file_name_tmp, file_name)
 
     ##########################################################################
     # UPLOAD
