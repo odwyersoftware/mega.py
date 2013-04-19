@@ -402,9 +402,9 @@ class Mega(object):
         attribs = decrypt_attr(attribs, k)
         file_name = attribs['n']
 
-        print("downloading {0} (size: {1}), url = {2}".format(attribs['n'].encode("utf8"),
-                                                              file_size,
-                                                              file_url))
+        # print("downloading {0} (size: {1}), url = {2}".format(attribs['n'].encode("utf8"),
+        #                                                       file_size,
+        #                                                       file_url))
 
         input_file = requests.get(file_url, stream=True).raw
 
