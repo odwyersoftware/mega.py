@@ -7,6 +7,8 @@ import os
 import random
 import binascii
 import requests
+import time
+import shutil
 from .errors import ValidationError, RequestError
 from .crypto import *
 
@@ -401,6 +403,7 @@ class Mega(object):
         attribs = base64_url_decode(file_data['at'])
         attribs = decrypt_attr(attribs, k)
         file_name = attribs['n']
+        file_name_tmp = '.megapy-%s-%s' % (int(time.time()*1000), filename)
 
         # print("downloading {0} (size: {1}), url = {2}".format(attribs['n'].encode("utf8"),
         #                                                       file_size,
@@ -411,7 +414,7 @@ class Mega(object):
         if dest_path:
             output_file = open(dest_path + '/' + file_name, 'wb')
         else:
-            output_file = open(file_name, 'wb')
+            output_file = open(file_name_tmp, 'wb')
 
         counter = Counter.new(
             128, initial_value=((iv[0] << 32) + iv[1]) << 64)
@@ -447,6 +450,8 @@ class Mega(object):
         # check mac integrity
         if (file_mac[0] ^ file_mac[1], file_mac[2] ^ file_mac[3]) != meta_mac:
             raise ValueError('Mismatched mac')
+
+        shutil.move(file_name_tmp, file_name)
 
     ##########################################################################
     # UPLOAD
