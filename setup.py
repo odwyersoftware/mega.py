@@ -38,6 +38,7 @@ setup(
     author_email='richard@richard.do',
     license='Creative Commons Attribution-Noncommercial-Share Alike license',
     long_description='https://github.com/richardasaurus/mega.py',
+    install_requires=['pycrypto', 'requests'],
     classifiers=[
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
