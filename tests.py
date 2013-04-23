@@ -2,6 +2,12 @@ from mega import Mega
 
 
 def test():
+    """
+    Enter your account details to begin
+    comment/uncomment lines to test various parts of the API
+    see readme.md for more information
+    """
+
     #user details
     email = 'your@email.com'
     password = 'password'
