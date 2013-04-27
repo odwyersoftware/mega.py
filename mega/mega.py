@@ -106,7 +106,7 @@ class Mega(object):
         Process a file
         """
         if file['t'] == 0 or file['t'] == 1:
-            keys = dict(keypart.split(':', 1) for keypart in file['k'].split('/'))
+            keys = dict(keypart.split(':', 1) for keypart in file['k'].split('/') if ':' in keypart)
             uid = file['u']
             key = None
             # my objects
