@@ -472,8 +472,8 @@ class Mega(object):
 
         #request upload url, call 'u' method
         input_file = open(filename, 'rb')
-        size = os.path.getsize(filename)
-        ul_url = self.api_request({'a': 'u', 's': size})['p']
+        file_size = os.path.getsize(filename)
+        ul_url = self.api_request({'a': 'u', 's': file_size})['p']
 
         #generate random aes key (128) for file
         ul_key = [random.randint(0, 0xFFFFFFFF) for _ in range(6)]
@@ -481,8 +481,10 @@ class Mega(object):
         aes = AES.new(a32_to_str(ul_key[:4]), AES.MODE_CTR, counter=count)
 
         file_mac = [0, 0, 0, 0]
-        for chunk_start, chunk_size in sorted(get_chunks(size).items()):
+        upload_progress = 0
+        for chunk_start, chunk_size in sorted(get_chunks(file_size).items()):
             chunk = input_file.read(chunk_size)
+            upload_progress += len(chunk)
 
             #determine chunks mac
             chunk_mac = [ul_key[4], ul_key[5], ul_key[4], ul_key[5]]
@@ -507,6 +509,10 @@ class Mega(object):
             output_file = requests.post(ul_url + "/" + str(chunk_start),
                                         data=chunk, timeout=self.timeout)
             completion_file_handle = output_file.text
+
+            if self.options.get('verbose') is True:
+                # upload progress
+                print('{0} of {1} uploaded'.format(upload_progress, file_size))
 
         #determine meta mac
         meta_mac = (file_mac[0] ^ file_mac[1], file_mac[2] ^ file_mac[3])
