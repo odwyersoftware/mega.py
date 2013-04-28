@@ -293,6 +293,29 @@ class Mega(object):
         #convert bytes to megabyes
         return json_resp['mstrg'] / 1048576
 
+    def get_storage_space(self, giga=False, mega=False, kilo=False):
+        """
+        Get the current storage space.
+        Return a dict containing at least:
+          'used' : the used space on the account
+          'total' : the maximum space allowed with current plan
+        All storage space are in bytes unless asked differently.
+        """
+        if sum(1 if x else 0 for x in (kilo, mega, giga)) > 1:
+            raise ValueError("Only one unit prefix can be specified")
+        unit_coef = 1
+        if kilo:
+          unit_coef = 1024.
+        if mega:
+          unit_coef = 1048576.
+        if giga:
+          unit_coef = 1073741824.
+        json_resp = self.api_request({'a': 'uq', 'xfer': 1, 'strg': 1})
+        return {
+            'used': json_resp['cstrg'] / unit_coef,
+            'total': json_resp['mstrg'] / unit_coef,
+            }
+
     def get_balance(self):
         """
         Get account monetary balance, Pro accounts only
