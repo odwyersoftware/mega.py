@@ -11,10 +11,11 @@ import time
 import shutil
 from .errors import ValidationError, RequestError
 from .crypto import *
+import tempfile
 
 
 class Mega(object):
-    def __init__(self):
+    def __init__(self, options=None):
         self.schema = 'https'
         self.domain = 'mega.co.nz'
         self.timeout = 160  # max time (secs) to wait for resp from api requests
@@ -22,11 +23,14 @@ class Mega(object):
         self.sequence_num = random.randint(0, 0xFFFFFFFF)
         self.request_id = make_id(10)
 
-    @classmethod
-    def login(cls, email, password):
-        instance = cls()
-        instance.login_user(email, password)
-        return instance
+        if options is None:
+            options = {}
+        self.options = options
+
+
+    def login(self, email, password):
+        self.login_user(email, password)
+        return self
 
     def login_user(self, email, password):
         password_aes = prepare_key(str_to_a32(password))
@@ -394,7 +398,7 @@ class Mega(object):
             meta_mac = file['meta_mac']
 
         # Seems to happens sometime... When  this occurs, files are 
-        # inaccessible also in the official also in the official webapp.
+        # inaccessible also in the official also in the official web app.
         # Strangely, files can come back later.
         if 'g' not in file_data:
             raise RequestError('File not accessible anymore')
@@ -403,14 +407,15 @@ class Mega(object):
         attribs = base64_url_decode(file_data['at'])
         attribs = decrypt_attr(attribs, k)
         file_name = attribs['n']
-        file_name_tmp = '.megapy-%s-%s' % (int(time.time() * 1000), file_name)
 
         input_file = requests.get(file_url, stream=True).raw
 
-        if dest_path:
-            output_file = open(dest_path + '/' + file_name_tmp, 'wb')
+        if dest_path is None:
+            dest_path = ''
         else:
-            output_file = open(file_name_tmp, 'wb')
+            dest_path += '/'
+
+        temp_output_file = tempfile.NamedTemporaryFile(mode='w+b', prefix='megapy_', delete=False)
 
         counter = Counter.new(
             128, initial_value=((iv[0] << 32) + iv[1]) << 64)
@@ -420,7 +425,7 @@ class Mega(object):
         for chunk_start, chunk_size in sorted(get_chunks(file_size).items()):
             chunk = input_file.read(chunk_size)
             chunk = aes.decrypt(chunk)
-            output_file.write(chunk)
+            temp_output_file.write(chunk)
 
             chunk_mac = [iv[0], iv[1], iv[0], iv[1]]
             for i in range(0, len(chunk), 16):
@@ -441,13 +446,19 @@ class Mega(object):
                 file_mac[2] ^ chunk_mac[2],
                 file_mac[3] ^ chunk_mac[3]]
             file_mac = aes_cbc_encrypt_a32(file_mac, k)
-        output_file.close()
+
+            if self.options.get('verbose') is True:
+                # temp file size
+                file_info = os.stat(temp_output_file.name)
+                print('{0} of {1} downloaded'.format(file_info.st_size, file_size))
+
+        temp_output_file.close()
 
         # check mac integrity
         if (file_mac[0] ^ file_mac[1], file_mac[2] ^ file_mac[3]) != meta_mac:
             raise ValueError('Mismatched mac')
 
-        shutil.move(file_name_tmp, file_name)
+        shutil.move(temp_output_file.name, dest_path + file_name)
 
     ##########################################################################
     # UPLOAD

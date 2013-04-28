@@ -13,6 +13,7 @@ def test():
     password = 'password'
 
     mega = Mega()
+    #mega = Mega({'verbose': True})  # verbose option for print output
 
     #login
     m = mega.login(email, password)
@@ -43,7 +44,7 @@ def test():
         print(link)
 
         #download file. by file object or url
-        m.download(file, '/tmp')
+        print m.download(file, '/tmp')
         #m.download_url(link)
 
         #delete or destroy file. by id or url
