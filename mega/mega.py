@@ -305,11 +305,11 @@ class Mega(object):
             raise ValueError("Only one unit prefix can be specified")
         unit_coef = 1
         if kilo:
-          unit_coef = 1024.
+          unit_coef = 1024
         if mega:
-          unit_coef = 1048576.
+          unit_coef = 1048576
         if giga:
-          unit_coef = 1073741824.
+          unit_coef = 1073741824
         json_resp = self.api_request({'a': 'uq', 'xfer': 1, 'strg': 1})
         return {
             'used': json_resp['cstrg'] / unit_coef,

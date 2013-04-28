@@ -43,6 +43,11 @@ balance = m.get_balance()
 ```python
 quota = m.get_quota()
 ```
+### Get account storage space
+```python
+# unit output kilo, mega, gig, otherwise bytes output
+space = m.get_storage_space(kilo=True)
+```
 ### Get account files
 ```python
 files = m.get_files()

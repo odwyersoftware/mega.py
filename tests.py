@@ -15,35 +15,37 @@ def test():
     mega = Mega()
     #mega = Mega({'verbose': True})  # verbose option for print output
 
-    #login
+    # login
     m = mega.login(email, password)
 
-    #get user details
+    # get user details
     details = m.get_user()
     print(details)
 
-    #get account files
+    # get account files
     files = m.get_files()
 
-    #get account disk quota in MB
+    # get account disk quota in MB
     print(m.get_quota())
+    # get account storage space
+    print(m.get_storage_space())
 
-    #example iterate over files
+    # example iterate over files
     for file in files:
         print(files[file])
 
-    #upload file
+    # upload file
     print(m.upload('tests.py'))
 
-    #search for a file in account
+    # search for a file in account
     file = m.find('tests.py')
 
     if file:
-        #get public link
+        # get public link
         link = m.get_link(file)
         print(link)
 
-        #download file. by file object or url
+        # download file. by file object or url
         print m.download(file, '/tmp')
         #m.download_url(link)
 
@@ -53,7 +55,7 @@ def test():
         #print(m.delete_url(link))
         #print(m.destroy_url(link))
 
-    #empty trash
+    # empty trash
     print(m.empty_trash())
 
 if __name__ == '__main__':
