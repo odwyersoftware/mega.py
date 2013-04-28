@@ -45,7 +45,7 @@ quota = m.get_quota()
 ```
 ### Get account storage space
 ```python
-# unit output kilo, mega, gig, otherwise bytes output
+# specify unit output kilo, mega, gig, else bytes will output
 space = m.get_storage_space(kilo=True)
 ```
 ### Get account files
