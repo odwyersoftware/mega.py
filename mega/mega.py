@@ -504,6 +504,7 @@ class Mega(object):
 
         file_mac = [0, 0, 0, 0]
         upload_progress = 0
+        completion_file_handle = None
         for chunk_start, chunk_size in sorted(get_chunks(file_size).items()):
             chunk = input_file.read(chunk_size)
             upload_progress += len(chunk)
