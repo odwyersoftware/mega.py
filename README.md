@@ -7,6 +7,7 @@ Python library for the Mega.co.nz API, currently supporting:
  - deleting
  - searching
  - sharing
+ - renaming
 
 This is a work in progress, further functionality coming shortly.
 
@@ -67,6 +68,11 @@ m.download(file, '/home/john-smith/Desktop')
 ### Create a folder
 ```python
 m.create_folder('new_folder')
+```
+### Rename a file or a folder
+```python
+file = m.find('myfile.doc')
+m.rename(file, 'my_file.doc')
 ```
 ### Search account for a file, and get its public link
 ```python

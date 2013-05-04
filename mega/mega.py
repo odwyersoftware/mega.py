@@ -584,3 +584,22 @@ class Mega(object):
                                  'i': self.request_id})
         #return API msg
         return data
+
+    def rename(self, file, new_name):
+        file = file[1]
+        #create new attribs
+        attribs = {'n': new_name}
+        #encrypt attribs
+        encrypt_attribs = base64_url_encode(encrypt_attr(attribs, file['k']))
+        encrypted_key = a32_to_base64(encrypt_key(file['key'], self.master_key))
+
+        #update attributes
+        data = self.api_request([{
+            'a': 'a',
+            'attr': encrypt_attribs,
+            'key': encrypted_key,
+            'n': file['h'],
+            'i': self.request_id}])
+
+        #return API msg
+        return data
