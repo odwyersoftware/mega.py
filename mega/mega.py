@@ -326,24 +326,32 @@ class Mega(object):
     ##########################################################################
     # DELETE
     def delete(self, public_handle):
-        #straight delete by id
+        """
+        Delete a file by its public handle
+        """
         return self.move(public_handle, 4)
 
     def delete_url(self, url):
-        #delete a file via it's url
+        """
+        Delete a file by its url
+        """
         path = self.parse_url(url).split('!')
         public_handle = path[0]
         file_id = self.get_id_from_public_handle(public_handle)
         return self.move(file_id, 4)
 
     def destroy(self, file_id):
-        #delete forever by private id
+        """
+        Destroy a file by its private id
+        """
         return self.api_request({'a': 'd',
                                  'n': file_id,
                                  'i': self.request_id})
 
     def destroy_url(self, url):
-        #delete a file via it's url
+        """
+        Destroy a file by its url
+        """
         path = self.parse_url(url).split('!')
         public_handle = path[0]
         file_id = self.get_id_from_public_handle(public_handle)
