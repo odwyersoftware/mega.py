@@ -108,26 +108,14 @@ def a32_to_base64(a):
 
 
 def get_chunks(size):
-    chunks = {}
-    p = pp = 0
-    i = 1
-
-    while i <= 8 and p < size - i * 0x20000:
-        chunks[p] = i * 0x20000
-        pp = p
-        p += chunks[p]
-        i += 1
-
-    while p < size:
-        chunks[p] = 0x100000
-        pp = p
-        p += chunks[p]
-
-    chunks[pp] = size - pp
-    if not chunks[pp]:
-        del chunks[pp]
-
-    return chunks
+    p = 0
+    s = 0x20000
+    while p+s < size:
+        yield(p, s)
+        p += s
+        if s < 0x100000:
+            s += 0x20000
+    yield(p, size-p)
 
 # more general functions
 def make_id(length):
