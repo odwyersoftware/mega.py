@@ -74,6 +74,12 @@ m.create_folder('new_folder')
 file = m.find('myfile.doc')
 m.rename(file, 'my_file.doc')
 ```
+### Moving a file or a folder into another folder
+```python
+file = m.find('myfile.doc')
+folder = m.find('myfolder')
+m.move(file[0], folder)
+```
 ### Search account for a file, and get its public link
 ```python
 file = m.find('myfile.doc')

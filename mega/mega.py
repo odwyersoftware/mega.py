@@ -370,10 +370,24 @@ class Mega(object):
         2 : root
         3 : inbox
         4 : trash
+
+        or
+
+        target's id
+
+        or
+
+        target's structure returned by find
         """
 
         #determine target_node_id
-        target_node_id = str(self.get_node_by_type(target)[0])
+        if type(target) == int:
+            target_node_id = str(self.get_node_by_type(target)[0])
+        elif type(target) in (str,unicode):
+            target_node_id = target
+        else:
+            file = target[1]
+            target_node_id = file['h']
         return self.api_request({'a': 'm',
                                  'n': file_id,
                                  't': target_node_id,
