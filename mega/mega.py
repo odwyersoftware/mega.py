@@ -503,33 +503,30 @@ class Mega(object):
 
         #generate random aes key (128) for file
         ul_key = [random.randint(0, 0xFFFFFFFF) for _ in range(6)]
+        k_str = a32_to_str(ul_key[:4])
         count = Counter.new(128, initial_value=((ul_key[4] << 32) + ul_key[5]) << 64)
-        aes = AES.new(a32_to_str(ul_key[:4]), AES.MODE_CTR, counter=count)
+        aes = AES.new(k_str, AES.MODE_CTR, counter=count)
 
-        file_mac = [0, 0, 0, 0]
         upload_progress = 0
         completion_file_handle = None
+
+        mac_str = '\0' * 16
+        mac_encryptor = AES.new(k_str, AES.MODE_CBC, mac_str)
+        iv_str = a32_to_str([ul_key[4], ul_key[5], ul_key[4], ul_key[5]])
+
         for chunk_start, chunk_size in get_chunks(file_size):
             chunk = input_file.read(chunk_size)
             upload_progress += len(chunk)
 
-            #determine chunks mac
-            chunk_mac = [ul_key[4], ul_key[5], ul_key[4], ul_key[5]]
-            for i in range(0, len(chunk), 16):
+            encryptor = AES.new(k_str, AES.MODE_CBC, iv_str)
+            for i in range(0, len(chunk)-16, 16):
                 block = chunk[i:i + 16]
-                if len(block) % 16:
-                    block += '\0' * (16 - len(block) % 16)
-                block = str_to_a32(block)
-                chunk_mac = [chunk_mac[0] ^ block[0], chunk_mac[1] ^ block[1],
-                             chunk_mac[2] ^ block[2],
-                             chunk_mac[3] ^ block[3]]
-                chunk_mac = aes_cbc_encrypt_a32(chunk_mac, ul_key[:4])
-
-            #our files mac
-            file_mac = [file_mac[0] ^ chunk_mac[0], file_mac[1] ^ chunk_mac[1],
-                        file_mac[2] ^ chunk_mac[2],
-                        file_mac[3] ^ chunk_mac[3]]
-            file_mac = aes_cbc_encrypt_a32(file_mac, ul_key[:4])
+                encryptor.encrypt(block)
+            i += 16
+            block = chunk[i:i + 16]
+            if len(block) % 16:
+                block += '\0' * (16 - len(block) % 16)
+            mac_str = mac_encryptor.encrypt(encryptor.encrypt(block))
 
             #encrypt file and upload
             chunk = aes.encrypt(chunk)
@@ -540,6 +537,8 @@ class Mega(object):
             if self.options.get('verbose') is True:
                 # upload progress
                 print('{0} of {1} uploaded'.format(upload_progress, file_size))
+
+        file_mac = str_to_a32(mac_str)
 
         #determine meta mac
         meta_mac = (file_mac[0] ^ file_mac[1], file_mac[2] ^ file_mac[3])
