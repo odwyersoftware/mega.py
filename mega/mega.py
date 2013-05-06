@@ -261,7 +261,12 @@ class Mega(object):
         """
         Get all files in a given target, e.g. 4=trash
         """
-        node_id = self.get_node_by_type(target)
+        if target in xrange(0, 4):
+            # convert special nodes
+            node_id = self.get_node_by_type(target)
+        else:
+            node_id = [target]
+
         files = self.api_request({'a': 'f', 'c': 1})
         files_dict = {}
         shared_keys = {}
