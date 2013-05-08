@@ -357,42 +357,6 @@ class Mega(object):
         file_id = self.get_id_from_public_handle(public_handle)
         return self.destroy(file_id)
 
-    def move(self, file_id, target):
-        """
-        Move a file to another parent node
-        params:
-        a : command
-        n : node we're moving
-        t : id of target parent node, moving to
-        i : request id
-
-        targets
-        2 : root
-        3 : inbox
-        4 : trash
-
-        or
-
-        target's id
-
-        or
-
-        target's structure returned by find
-        """
-
-        #determine target_node_id
-        if type(target) == int:
-            target_node_id = str(self.get_node_by_type(target)[0])
-        elif type(target) in (str,unicode):
-            target_node_id = target
-        else:
-            file = target[1]
-            target_node_id = file['h']
-        return self.api_request({'a': 'm',
-                                 'n': file_id,
-                                 't': target_node_id,
-                                 'i': self.request_id})
-
     def empty_trash(self):
         # get list of files in rubbish out
         files = self.get_files_in_node(4)
@@ -620,3 +584,36 @@ class Mega(object):
 
         #return API msg
         return data
+
+    def move(self, file_id, target):
+        """
+        Move a file to another parent node
+        params:
+        a : command
+        n : node we're moving
+        t : id of target parent node, moving to
+        i : request id
+
+        targets
+        2 : root
+        3 : inbox
+        4 : trash
+
+        or...
+        target's id
+        or...
+        target's structure returned by find()
+        """
+
+        #determine target_node_id
+        if type(target) == int:
+            target_node_id = str(self.get_node_by_type(target)[0])
+        elif type(target) in (str, unicode):
+            target_node_id = target
+        else:
+            file = target[1]
+            target_node_id = file['h']
+        return self.api_request({'a': 'm',
+                                 'n': file_id,
+                                 't': target_node_id,
+                                 'i': self.request_id})
