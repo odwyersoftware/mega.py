@@ -279,10 +279,9 @@ class Mega(object):
 
     def get_id_from_public_handle(self, public_handle):
         #get node data
-        #TODO fix this function
         node_data = self.api_request({'a': 'f', 'f': 1, 'p': public_handle})
-
-        return self.get_id_from_obj(node_data)
+        node_id = self.get_id_from_obj(node_data)
+        return node_id
 
     def get_id_from_obj(self, node_data):
         #determine node id
