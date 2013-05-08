@@ -555,6 +555,8 @@ class Mega(object):
         input_file.close()
         return data
 
+    ##########################################################################
+    # OTHER OPERATIONS
     def create_folder(self, name, dest=None):
         #determine storage node
         if dest is None:
