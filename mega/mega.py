@@ -284,7 +284,9 @@ class Mega(object):
         return node_id
 
     def get_id_from_obj(self, node_data):
-        #determine node id
+        """
+        Get node id from a file object
+        """
         node_id = None
 
         for i in node_data['f']:
