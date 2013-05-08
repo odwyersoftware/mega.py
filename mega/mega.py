@@ -282,9 +282,9 @@ class Mega(object):
         #TODO fix this function
         node_data = self.api_request({'a': 'f', 'f': 1, 'p': public_handle})
 
-        return self.get_id_from_node_data(node_data)
+        return self.get_id_from_obj(node_data)
 
-    def get_id_from_node_data(self, node_data):
+    def get_id_from_obj(self, node_data):
         #determine node id
         node_id = None
 
