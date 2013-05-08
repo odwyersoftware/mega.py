@@ -58,6 +58,7 @@ files = m.get_files()
 ```python
 file = m.upload('myfile.doc')
 m.get_upload_link(file)
+# see mega.py for destination and filename options
 ```
 ### Download a file from URL or file obj, optionally specify destination folder
 ```python
@@ -65,6 +66,8 @@ file = m.find('myfile.doc')
 m.download(file)
 m.download_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
 m.download(file, '/home/john-smith/Desktop')
+# specify optional download filename
+m.download(file, '/home/john-smith/Desktop', 'myfile.zip')
 ```
 ### Create a folder
 ```python

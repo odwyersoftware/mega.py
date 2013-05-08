@@ -261,7 +261,6 @@ class Mega(object):
         """
         Get all files in a given target, e.g. 4=trash
         """
-        
         if type(target) == int:
             # convert special nodes (e.g. trash)
             node_id = self.get_node_by_type(target)
