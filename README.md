@@ -8,6 +8,7 @@ Python library for the Mega.co.nz API, currently supporting:
  - searching
  - sharing
  - renaming
+ - moving files
 
 This is a work in progress, further functionality coming shortly.
 
