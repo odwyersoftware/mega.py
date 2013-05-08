@@ -637,3 +637,31 @@ class Mega(object):
                                  'n': file_id,
                                  't': target_node_id,
                                  'i': self.request_id})
+
+    def add_contact(self, email):
+        """
+        Add another user to your mega contact list
+        """
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            ValidationError('add_contact requires a valid email address')
+        else:
+            return self.api_request({'a': 'ur',
+                                    'u': email,
+                                    'l': "1",
+                                    'i': self.request_id})
+
+    def get_contacts(self):
+        raise NotImplementedError()
+        # TODO implement this
+        # sn param below = maxaction var with function getsc() in mega.co.nz js
+        # seens to be the 'sn' attrib of the previous request response...
+        # mega.co.nz js full source @ http://homepages.shu.ac.uk/~rjodwyer/mega-scripts-all.js
+        # requests goto /sc rather than
+
+        #req = requests.post(
+        #'{0}://g.api.{1}/sc'.format(self.schema, self.domain),
+        #    params={'sn': 'ilRTiY7r35I'},
+        #    data=json.dumps(None),
+        #    timeout=self.timeout)
+        #json_resp = json.loads(req.text)
+        #print json_resp
