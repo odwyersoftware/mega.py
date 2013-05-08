@@ -372,22 +372,22 @@ class Mega(object):
 
     ##########################################################################
     # DOWNLOAD
-    def download(self, file, dest_path=None, dest_file=None):
+    def download(self, file, dest_path=None, dest_filename=None):
         """
         Download a file by it's file object
         """
-        self.download_file(None, None, file=file[1], dest_path=dest_path, dest_file=dest_file, is_public=False)
+        self.download_file(None, None, file=file[1], dest_path=dest_path, dest_filename=dest_filename, is_public=False)
 
-    def download_url(self, url, dest_path=None, dest_file=None):
+    def download_url(self, url, dest_path=None, dest_filename=None):
         """
         Download a file by it's public url
         """
         path = self.parse_url(url).split('!')
         file_id = path[0]
         file_key = path[1]
-        self.download_file(file_id, file_key, dest_path, dest_file, is_public=True)
+        self.download_file(file_id, file_key, dest_path, dest_filename, is_public=True)
 
-    def download_file(self, file_handle, file_key, dest_path=None, dest_file=None, is_public=False, file=None):
+    def download_file(self, file_handle, file_key, dest_path=None, dest_filename=None, is_public=False, file=None):
         if file is None :
             if is_public:
                 file_key = base64_to_a32(file_key)
@@ -415,8 +415,8 @@ class Mega(object):
         attribs = base64_url_decode(file_data['at'])
         attribs = decrypt_attr(attribs, k)
 
-        if dest_file is not None:
-            file_name = dest_file
+        if dest_filename is not None:
+            file_name = dest_filename
         else:
             file_name = attribs['n']
 
@@ -470,7 +470,7 @@ class Mega(object):
 
     ##########################################################################
     # UPLOAD
-    def upload(self, filename, dest=None, remote=None):
+    def upload(self, filename, dest=None, dest_filename=None):
         #determine storage node
         if dest is None:
             #if none set, upload to cloud drive node
@@ -525,8 +525,8 @@ class Mega(object):
         #determine meta mac
         meta_mac = (file_mac[0] ^ file_mac[1], file_mac[2] ^ file_mac[3])
 
-        if remote is not None:
-            attribs = {'n': remote}
+        if dest_filename is not None:
+            attribs = {'n': dest_filename}
         else:
             attribs = {'n': os.path.basename(filename)}
 
