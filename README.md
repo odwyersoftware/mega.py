@@ -107,6 +107,12 @@ files = m.find('myfile.doc')
 if files:
     m.delete(files[0])
 ```
+### Add/remove contacts
+```python
+m.add_contact('test@email.com')
+m.remove_contact('test@email.com')
+```
+
 ## Requirements
 
     1. Python2.7+

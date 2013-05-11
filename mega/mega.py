@@ -642,12 +642,31 @@ class Mega(object):
         """
         Add another user to your mega contact list
         """
+        return self._edit_contact(email, True)
+
+    def remove_contact(self, email):
+        """
+        Remove a user to your mega contact list
+        """
+        return self._edit_contact(email, False)
+
+    def _edit_contact(self, email, add):
+        """
+        Editing contacts
+        """
+        if add is True:
+            l = '1'  # add command
+        elif add is False:
+            l = '0'  # remove command
+        else:
+            raise ValidationError('add parameter must be of type bool')
+
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             ValidationError('add_contact requires a valid email address')
         else:
             return self.api_request({'a': 'ur',
                                     'u': email,
-                                    'l': "1",
+                                    'l': l,
                                     'i': self.request_id})
 
     def get_contacts(self):
@@ -660,7 +679,7 @@ class Mega(object):
 
         #req = requests.post(
         #'{0}://g.api.{1}/sc'.format(self.schema, self.domain),
-        #    params={'sn': 'ilRTiY7r35I'},
+        #    params={'sn': 'ZMxcQ_DmHnM', 'ssl': '1'},
         #    data=json.dumps(None),
         #    timeout=self.timeout)
         #json_resp = json.loads(req.text)
