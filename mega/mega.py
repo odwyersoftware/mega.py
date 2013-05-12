@@ -457,7 +457,13 @@ class Mega(object):
             for i in range(0, len(chunk)-16, 16):
                 block = chunk[i:i + 16]
                 encryptor.encrypt(block)
-            i += 16
+
+            #fix for files under 16 bytes failing
+            if file_size > 16:
+                i += 16
+            else:
+                i = 0
+
             block = chunk[i:i + 16]
             if len(block) % 16:
                 block += '\0' * (16 - (len(block) % 16))
@@ -514,7 +520,13 @@ class Mega(object):
             for i in range(0, len(chunk)-16, 16):
                 block = chunk[i:i + 16]
                 encryptor.encrypt(block)
-            i += 16
+
+            #fix for files under 16 bytes failing
+            if file_size > 16:
+                i += 16
+            else:
+                i = 0
+
             block = chunk[i:i + 16]
             if len(block) % 16:
                 block += '\0' * (16 - len(block) % 16)
