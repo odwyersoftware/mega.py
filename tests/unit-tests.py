@@ -58,7 +58,7 @@ class TestMega(unittest.TestCase):
     def test_find(self):
         file = FIND_RESP
         if file:
-            self.assertTrue(isinstance(file, tuple), msg='this is {0} end'.format(file))
+            self.assertTrue(isinstance(file, tuple))
 
     def test_get_link(self):
         file = FIND_RESP
