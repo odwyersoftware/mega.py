@@ -35,10 +35,10 @@ def test():
         print(files[file])
 
     # upload file
-    print(m.upload('tests.py'))
+    print(m.upload('examples.py'))
 
     # search for a file in account
-    file = m.find('tests.py')
+    file = m.find('examples.py')
 
     if file:
         # get public link

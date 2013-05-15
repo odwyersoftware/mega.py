@@ -84,7 +84,7 @@ class Mega(object):
             data = [data]
 
         req = requests.post(
-            '{0}://g.api.{1}/cs'.format(self.schema, self.domain),
+            '{0}://eu.api.{1}/cs'.format(self.schema, self.domain),
             params=params,
             data=json.dumps(data),
             timeout=self.timeout)
