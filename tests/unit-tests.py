@@ -22,12 +22,11 @@ TEST_FOLDER = 'mega.py_testfolder_{0}'.format(random.random())
 
 
 def pre_test():
-    m.upload(TEST_FILE)
-    # cached response to lower API requests for testing
-    FIND_RESP = m.find(TEST_FILE)
-    if FIND_RESP:
+    global FIND_RESP
+    try:
+        m.upload(TEST_FILE)
         return True
-    else:
+    except:
         raise ValueError('Pre-test functions failed!')
 
 
@@ -55,13 +54,8 @@ class TestMega(unittest.TestCase):
         files = m.get_files()
         self.assertTrue(isinstance(files, dict))
 
-    def test_find(self):
-        file = FIND_RESP
-        if file:
-            self.assertTrue(isinstance(file, tuple))
-
     def test_get_link(self):
-        file = FIND_RESP
+        file = m.find(TEST_FILE)
         if file:
             link = m.get_link(file)
             self.assertTrue(isinstance(link, str))
