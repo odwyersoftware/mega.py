@@ -24,15 +24,6 @@ TEST_FILE = os.path.basename(__file__)
 TEST_FOLDER = 'mega.py_testfolder_{0}'.format(random.random())
 
 
-def pre_test():
-    global FIND_RESP
-    try:
-        m.upload(TEST_FILE)
-        return True
-    except:
-        raise ValueError('Pre-test functions failed!')
-
-
 class TestMega(unittest.TestCase):
 
     def test_mega(self):
@@ -112,5 +103,4 @@ class TestMega(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    if pre_test():
-        unittest.main()
+    unittest.main()
