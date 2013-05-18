@@ -1,2 +1,3 @@
 requests>=0.10
 pycrypto
+mega.py>=0.9.16
