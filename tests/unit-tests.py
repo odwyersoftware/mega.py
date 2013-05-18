@@ -12,7 +12,10 @@ email = 'your@email.com'
 password = 'password'
 
 mega = Mega()
-m = mega.login(email, password)
+# anonymous login
+m = mega.login()
+# normal login
+#m = mega.login(email, password)
 
 FIND_RESP = None
 TEST_CONTACT = 'test@mega.co.nz'
@@ -86,16 +89,12 @@ class TestMega(unittest.TestCase):
         if file:
             resp = m.delete(file[0])
             self.assertTrue(isinstance(resp, int))
-        else:
-            raise ValueError('file not found')
 
     def test_destroy(self):
         file = m.find(TEST_FILE)
         if file:
             resp = m.destroy(file[0])
             self.assertTrue(isinstance(resp, int))
-        else:
-            raise ValueError('file not found')
 
     def test_empty_trash(self):
         #resp None if already empty, else int

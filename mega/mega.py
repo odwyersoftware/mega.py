@@ -27,8 +27,11 @@ class Mega(object):
             options = {}
         self.options = options
 
-    def login(self, email, password):
-        self.login_user(email, password)
+    def login(self, email=None, password=None):
+        if email:
+            self.login_user(email, password)
+        else:
+            self.login_anonymous()
         return self
 
     def login_user(self, email, password):
@@ -39,6 +42,24 @@ class Mega(object):
         if isinstance(resp, int):
             raise RequestError(resp)
         self._login_process(resp, password_aes)
+
+    def login_anonymous(self):
+        master_key = [random.randint(0, 0xFFFFFFFF)] * 4
+        password_key = [random.randint(0, 0xFFFFFFFF)] * 4
+        session_self_challenge = [random.randint(0, 0xFFFFFFFF)] * 4
+
+        user = self.api_request({
+          'a': 'up',
+          'k': a32_to_base64(encrypt_key(master_key, password_key)),
+          'ts': base64_url_encode(a32_to_str(session_self_challenge) +
+                                  a32_to_str(encrypt_key(session_self_challenge, master_key)))
+        })
+
+        resp = self.api_request({'a': 'us', 'user': user})
+        #if numeric error code response
+        if isinstance(resp, int):
+            raise RequestError(resp)
+        self._login_process(resp, password_key)
 
     def _login_process(self, resp, password):
         encrypted_master_key = base64_to_a32(resp['k'])

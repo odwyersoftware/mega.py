@@ -34,6 +34,8 @@ mega = Mega({'verbose': True})
 ### Login to Mega
 ```python
 m = mega.login(email, password)
+# login using a temporary anonymous account
+m = mega.login()
 ```
 ### Get user details
 ```python
