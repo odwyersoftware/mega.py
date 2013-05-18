@@ -27,79 +27,79 @@ TEST_FOLDER = 'mega.py_testfolder_{0}'.format(random.random())
 class TestMega(unittest.TestCase):
 
     def test_mega(self):
-        self.assertTrue(isinstance(mega, Mega))
+        self.assertIsInstance(mega, Mega)
 
     def test_login(self):
-        self.assertTrue(isinstance(mega, Mega))
+        self.assertIsInstance(mega, Mega)
 
     def test_get_user(self):
         resp = m.get_user()
-        self.assertTrue(isinstance(resp, dict))
+        self.assertIsInstance(resp, dict)
 
     def test_get_quota(self):
         resp = m.get_quota()
-        self.assertTrue(isinstance(resp, long))
+        self.assertIsInstance(resp, long)
 
     def test_get_storage_space(self):
         resp = m.get_storage_space(mega=True)
-        self.assertTrue(isinstance(resp, dict))
+        self.assertIsInstance(resp, dict)
 
     def test_get_files(self):
         files = m.get_files()
-        self.assertTrue(isinstance(files, dict))
+        self.assertIsInstance(files, dict)
 
     def test_get_link(self):
         file = m.find(TEST_FILE)
         if file:
             link = m.get_link(file)
-            self.assertTrue(isinstance(link, str))
+            self.assertIsInstance(link, str)
 
     def test_import_public_url(self):
         resp = m.import_public_url(TEST_PUBLIC_URL)
         file_handle = m.get_id_from_obj(resp)
         resp = m.destroy(file_handle)
-        self.assertTrue(isinstance(resp, int))
+        self.assertIsInstance(resp, int)
 
     def test_create_folder(self):
         resp = m.create_folder(TEST_FOLDER)
-        self.assertTrue(isinstance(resp, dict))
+        self.assertIsInstance(resp, dict)
 
     def test_rename(self):
         file = m.find(TEST_FOLDER)
         if file:
             resp = m.rename(file, TEST_FOLDER)
-            self.assertTrue(isinstance(resp, int))
+            self.assertIsInstance(resp, int)
 
     def test_delete_folder(self):
         folder_node = m.find(TEST_FOLDER)[0]
         resp = m.delete(folder_node)
-        self.assertTrue(isinstance(resp, int))
+        self.assertIsInstance(resp, int)
 
     def test_delete(self):
         file = m.find(TEST_FILE)
         if file:
             resp = m.delete(file[0])
-            self.assertTrue(isinstance(resp, int))
+            self.assertIsInstance(resp, int)
 
     def test_destroy(self):
         file = m.find(TEST_FILE)
         if file:
             resp = m.destroy(file[0])
-            self.assertTrue(isinstance(resp, int))
+            self.assertIsInstance(resp, int)
 
     def test_empty_trash(self):
         #resp None if already empty, else int
         resp = m.empty_trash()
         if resp is not None:
-            self.assertTrue(isinstance(resp, int))
+            self.assertIsInstance(resp, int)
 
     def test_add_contact(self):
         resp = m.add_contact(TEST_CONTACT)
-        self.assertTrue(isinstance(resp, int))
+        self.assertIsInstance(resp, int)
 
     def test_remove_contact(self):
         resp = m.remove_contact(TEST_CONTACT)
-        self.assertTrue(isinstance(resp, int))
+        self.assertIsInstance(resp, int)
 
 
 if __name__ == '__main__':
