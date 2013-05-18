@@ -1,5 +1,6 @@
 # Mega.py
 [![Build Status](https://travis-ci.org/richardasaurus/mega.py.png?branch=master)](https://travis-ci.org/richardasaurus/mega.py)
+[https://pypip.in/d/mega.py/badge.png](https://crate.io/packages/mega.py/)
 
 Python library for the Mega.co.nz API, currently supporting:
  - login
