@@ -38,7 +38,7 @@ class TestMega(unittest.TestCase):
 
     def test_get_quota(self):
         resp = m.get_quota()
-        self.assertIsInstance(resp, long)
+        self.assertIsInstance(int(resp), int)
 
     def test_get_storage_space(self):
         resp = m.get_storage_space(mega=True)
