@@ -7,12 +7,19 @@ This file contains definitions for some of the properties within the API. The ai
 ### Node attributes (json properties)
 
 'a' Type
+
 'h' Id
+
 'p' Parent Id
+
 'a' encrypted Attributes (within this: 'n' Name)
+
 'k' Node Key
+
 'u' User Id
+
 's' Size
+
 'ts' Time Stamp
 
 #### Node types
