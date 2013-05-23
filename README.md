@@ -14,6 +14,8 @@ Python library for the Mega.co.nz API, currently supporting:
 
 This is a work in progress, further functionality coming shortly.
 
+For more detailed information see API_INFO.md
+
 ## How To Use
 
 ### Install mega.py package
