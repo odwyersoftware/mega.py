@@ -66,6 +66,12 @@ file = m.upload('myfile.doc')
 m.get_upload_link(file)
 # see mega.py for destination and filename options
 ```
+### Upload a file to a destination folder
+```python
+folder = m.find('my_mega_folder')
+m.upload('myfile.doc', folder[0])
+```
+
 ### Download a file from URL or file obj, optionally specify destination folder
 ```python
 file = m.find('myfile.doc')
