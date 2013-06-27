@@ -117,6 +117,7 @@ def get_chunks(size):
             s += 0x20000
     yield(p, size-p)
 
+
 # more general functions
 def make_id(length):
     text = ''
