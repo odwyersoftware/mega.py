@@ -199,6 +199,34 @@ class Mega(object):
 
     ##########################################################################
     # GET
+    
+    def find_path_descriptor(self, path):
+        """
+        Find descriptor of folder inside a path. i.e.: folder1/folder2/folder3
+        Params:
+            path, string like folder1/folder2/folder3
+        Return:
+            Descriptor (str) of folder3 if exists, None otherwise
+        """
+        paths = path.split('/')
+
+        files = self.get_files()
+        parent_desc = self.root_id
+        found = False
+        for foldername in paths:
+            if foldername != '':
+                for file in files.iteritems():
+                    if file[1]['a'] and file[1]['t'] and \
+                            file[1]['a']['n'] == foldername:
+                        if parent_desc == file[1]['p']:
+                            parent_desc = file[0]
+                            found = True
+                if found:
+                    found = False
+                else:
+                    return None
+        return parent_desc
+    
     def find(self, filename):
         """
         Return file object from given filename
