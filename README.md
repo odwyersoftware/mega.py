@@ -1,6 +1,6 @@
 # Deprecated
 
-Mega.py is now deprecated, please use the official SDK https://github.com/meganz/sdk2.
+Mega.py is now deprecated, please use the official SDK https://github.com/meganz/sdk.
 
 I aim to write a wrapper for the SDK when i have the time to do so.
 
