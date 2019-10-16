@@ -1,1 +1,1 @@
-from .mega import Mega
+from .mega import Mega  # noqa

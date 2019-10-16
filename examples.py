@@ -1,3 +1,4 @@
+import os
 from mega import Mega
 
 
@@ -8,12 +9,12 @@ def test():
     see readme.md for more information
     """
 
-    #user details
-    email = 'your@email.com'
-    password = 'password'
+    # user details
+    email = os.environ['EMAIL']
+    password = os.environ['PASS']
 
     mega = Mega()
-    #mega = Mega({'verbose': True})  # verbose option for print output
+    # mega = Mega({'verbose': True})  # verbose option for print output
 
     # login
     m = mega.login(email, password)
@@ -47,16 +48,17 @@ def test():
 
         # download file. by file object or url
         print m.download(file, '/tmp')
-        #m.download_url(link)
+        # m.download_url(link)
 
-        #delete or destroy file. by id or url
+        # delete or destroy file. by id or url
         print(m.delete(file[0]))
-        #print(m.destroy(file[0]))
-        #print(m.delete_url(link))
-        #print(m.destroy_url(link))
+        # print(m.destroy(file[0]))
+        # print(m.delete_url(link))
+        # print(m.destroy_url(link))
 
     # empty trash
     print(m.empty_trash())
+
 
 if __name__ == '__main__':
     test()

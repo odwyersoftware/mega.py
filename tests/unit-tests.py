@@ -3,23 +3,26 @@ These unit tests will upload a test file,a test folder and a test contact,
 Perform api operations on them,
 And them remove them from your account.
 """
-from mega import Mega
 import unittest
 import random
 import os
 
-email = 'your@email.com'
-password = 'password'
+from mega import Mega
+
+email = os.environ['EMAIL']
+password = os.environ['PASS']
 
 mega = Mega()
 # anonymous login
 m = mega.login()
 # normal login
-#m = mega.login(email, password)
+# m = mega.login(email, password)
 
 FIND_RESP = None
 TEST_CONTACT = 'test@mega.co.nz'
-TEST_PUBLIC_URL = 'https://mega.co.nz/#!EYI2VagT!Ic1yblki8oM4v6XHquCe4gu84kxc4glFchj8OvcT5lw'
+TEST_PUBLIC_URL = (
+    'https://mega.nz/#!hYVmXKqL!r0d0-WRnFwulR_shhuEDwrY1Vo103-am1MyUy8oV6Ps'
+)
 TEST_FILE = os.path.basename(__file__)
 TEST_FOLDER = 'mega.py_testfolder_{0}'.format(random.random())
 
@@ -88,7 +91,7 @@ class TestMega(unittest.TestCase):
             self.assertIsInstance(resp, int)
 
     def test_empty_trash(self):
-        #resp None if already empty, else int
+        # resp None if already empty, else int
         resp = m.empty_trash()
         if resp is not None:
             self.assertIsInstance(resp, int)

@@ -48,14 +48,14 @@ def prepare_key(arr):
 
 def encrypt_key(a, key):
     return sum(
-        (aes_cbc_encrypt_a32(a[i:i + 4], key)
-            for i in range(0, len(a), 4)), ())
+        (aes_cbc_encrypt_a32(a[i:i + 4], key) for i in range(0, len(a), 4)), ()
+    )
 
 
 def decrypt_key(a, key):
     return sum(
-        (aes_cbc_decrypt_a32(a[i:i + 4], key)
-            for i in range(0, len(a), 4)), ())
+        (aes_cbc_decrypt_a32(a[i:i + 4], key) for i in range(0, len(a), 4)), ()
+    )
 
 
 def encrypt_attr(attr, key):
@@ -86,7 +86,7 @@ def mpi_to_int(s):
 
 
 def base64_url_decode(data):
-    data += '=='[(2 - len(data) * 3) % 4:]
+    data += '==' [(2 - len(data) * 3) % 4:]
     for search, replace in (('-', '+'), ('_', '/'), (',', '')):
         data = data.replace(search, replace)
     return base64.b64decode(data)
@@ -110,12 +110,12 @@ def a32_to_base64(a):
 def get_chunks(size):
     p = 0
     s = 0x20000
-    while p+s < size:
-        yield(p, s)
+    while p + s < size:
+        yield (p, s)
         p += s
         if s < 0x100000:
             s += 0x20000
-    yield(p, size-p)
+    yield (p, size - p)
 
 
 # more general functions
