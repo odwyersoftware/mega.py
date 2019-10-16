@@ -9,3 +9,4 @@ yapf
 tox
 coverage
 pytest-cov
+zest.releaser
