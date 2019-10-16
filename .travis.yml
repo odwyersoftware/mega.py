@@ -1,5 +1,10 @@
+sudo: false
 language: python
 python:
-  - "2.7"
-install: pip install -r requirements-dev.txt
-script: python setup.py install && pytest tests/unit-tests.py -x -s -v
+    - 2.7
+    - 3.7
+env:
+  - TOXENV=py-normal
+
+install: pip install tox
+script: tox

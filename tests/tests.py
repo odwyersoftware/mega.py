@@ -9,9 +9,6 @@ import os
 
 from mega import Mega
 
-email = os.environ['EMAIL']
-password = os.environ['PASS']
-
 mega = Mega()
 # anonymous login
 m = mega.login()
