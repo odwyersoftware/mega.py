@@ -6,7 +6,7 @@ import binascii
 import random
 import sys
 
-### Python3 compatibility
+# Python3 compatibility
 if sys.version_info < (3, ):
 
     def makebyte(x):

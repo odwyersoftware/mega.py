@@ -59,7 +59,8 @@ class Mega(object):
                 a32_to_base64(encrypt_key(master_key, password_key)),
                 'ts':
                 base64_url_encode(
-                    a32_to_str(session_self_challenge) + a32_to_str(encrypt_key(session_self_challenge, master_key))
+                    a32_to_str(session_self_challenge) +
+                    a32_to_str(encrypt_key(session_self_challenge, master_key))
                 )
             }
         )
