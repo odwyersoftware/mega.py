@@ -59,9 +59,7 @@ class Mega(object):
                 a32_to_base64(encrypt_key(master_key, password_key)),
                 'ts':
                 base64_url_encode(
-                    a32_to_str(session_self_challenge) + a32_to_str(
-                        encrypt_key(session_self_challenge, master_key)
-                    )
+                    a32_to_str(session_self_challenge) + a32_to_str(encrypt_key(session_self_challenge, master_key))
                 )
             }
         )
@@ -101,7 +99,7 @@ class Mega(object):
             encrypted_sid = mpi_to_int(base64_url_decode(resp['csid']))
             rsa_decrypter = RSA.construct(
                 (
-                    self.rsa_private_key[0] * self.rsa_private_key[1], 0L,
+                    self.rsa_private_key[0] * self.rsa_private_key[1], 0,
                     self.rsa_private_key[2], self.rsa_private_key[0],
                     self.rsa_private_key[1]
                 )
@@ -256,7 +254,7 @@ class Mega(object):
         found = False
         for foldername in paths:
             if foldername != '':
-                for file in files.iteritems():
+                for file in files.items():
                     if file[1]['a'] and file[1]['t'] and \
                             file[1]['a']['n'] == foldername:
                         if parent_desc == file[1]['p']:
@@ -273,7 +271,7 @@ class Mega(object):
         Return file object from given filename
         """
         files = self.get_files()
-        for file in files.items():
+        for file in list(files.items()):
             if not isinstance(file[1]['a'], dict):
                 continue
             if file[1]['a'] and file[1]['a']['n'] == filename:
@@ -348,7 +346,7 @@ class Mega(object):
         4: special trash bin
         """
         nodes = self.get_files()
-        for node in nodes.items():
+        for node in list(nodes.items()):
             if node[1]['t'] == type:
                 return node
 
@@ -385,7 +383,7 @@ class Mega(object):
         node_id = None
 
         for i in node_data['f']:
-            if i['h'] != u'':
+            if i['h'] != '':
                 node_id = i['h']
         return node_id
 
@@ -608,11 +606,11 @@ class Mega(object):
             if self.options.get('verbose') is True:
                 # temp file size
                 file_info = os.stat(temp_output_file.name)
-                print(
+                print((
                     '{0} of {1} downloaded'.format(
                         file_info.st_size, file_size
                     )
-                )
+                ))
 
         file_mac = str_to_a32(mac_str)
 
@@ -685,11 +683,11 @@ class Mega(object):
 
                 if self.options.get('verbose') is True:
                     # upload progress
-                    print(
+                    print((
                         '{0} of {1} uploaded'.format(
                             upload_progress, file_size
                         )
-                    )
+                    ))
         else:
             output_file = requests.post(
                 ul_url + "/0", data='', timeout=self.timeout
@@ -818,7 +816,7 @@ class Mega(object):
         # determine target_node_id
         if type(target) == int:
             target_node_id = str(self.get_node_by_type(target)[0])
-        elif type(target) in (str, unicode):
+        elif type(target) in (str, str):
             target_node_id = target
         else:
             file = target[1]

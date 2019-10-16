@@ -27,16 +27,16 @@ def test():
     files = m.get_files()
 
     # get account disk quota in MB
-    print(m.get_quota())
+    print((m.get_quota()))
     # get account storage space
-    print(m.get_storage_space())
+    print((m.get_storage_space()))
 
     # example iterate over files
     for file in files:
-        print(files[file])
+        print((files[file]))
 
     # upload file
-    print(m.upload('examples.py'))
+    print((m.upload('examples.py')))
 
     # search for a file in account
     file = m.find('examples.py')
@@ -47,17 +47,17 @@ def test():
         print(link)
 
         # download file. by file object or url
-        print m.download(file, '/tmp')
+        print(m.download(file, '/tmp'))
         # m.download_url(link)
 
         # delete or destroy file. by id or url
-        print(m.delete(file[0]))
+        print((m.delete(file[0])))
         # print(m.destroy(file[0]))
         # print(m.delete_url(link))
         # print(m.destroy_url(link))
 
     # empty trash
-    print(m.empty_trash())
+    print((m.empty_trash()))
 
 
 if __name__ == '__main__':
