@@ -191,9 +191,11 @@ class Mega:
 
     def _parse_url(self, url):
         # parse file id and key from url
-        if '!' in url:
-            match = re.findall(r'/#!(.*)', url)
-            path = match[0]
+        if '#' in url:
+            id = url.split("file/",5)[1]
+            key = id.split("#",5)[1]
+            id = id.split("#",5)[0]
+            path = str(id) + '!' + str(key)
             return path
         else:
             raise RequestError('Url key missing')
