@@ -189,16 +189,22 @@ class Mega:
             raise RequestError(json_resp)
         return json_resp[0]
 
+    # def _parse_url(self, url):
+    #     # parse file id and key from url
+    #     if '!' in url:
+    #         match = re.findall(r'/#!(.*)', url)
+    #         path = match[0]
+    #         return path
+    #     else:
+    #         raise RequestError('Url key missing')
+
     def _parse_url(self, url):
         # parse file id and key from url
-        if '#' in url:
-            id = url.split("file/",5)[1]
-            key = id.split("#",5)[1]
-            id = id.split("#",5)[0]
-            path = str(id) + '!' + str(key)
-            return path
-        else:
-            raise RequestError('Url key missing')
+        url = url.replace(" ", "") #strip spaces
+        id = re.findall(r'\W\w\w\w\w\w\w\w\w\W',url)[0][1:-1]
+        id_index = re.search(id,url).end()
+        key = url[id_index+1:]
+        return str(id) + '!' + str(key)
 
     def _process_file(self, file, shared_keys):
         if file['t'] == 0 or file['t'] == 1:
