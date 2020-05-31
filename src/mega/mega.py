@@ -192,11 +192,11 @@ class Mega:
     def _parse_url(self, url):
         # parse file id and key from url
         if '!' in url:
-            match = re.findall(r'/#!(.*)', url)
+            match = re.findall(r'file/(.*)', url) #change to new mega url ex. mega.nz/file/6NBn3CbC#-OglNAiXpvRSS0k4jvM0EQxl4378hr7QovIgYKhIcoiI
             path = match[0]
             return path
         else:
-            raise RequestError('Url key missing')
+            raise RequestError('Url key missing or url new')
 
     def _process_file(self, file, shared_keys):
         if file['t'] == 0 or file['t'] == 1:
@@ -542,7 +542,7 @@ class Mega:
         """
         Delete a file by its url
         """
-        path = self._parse_url(url).split('!')
+        path = self._parse_url(url).split('#')
         public_handle = path[0]
         file_id = self.get_id_from_public_handle(public_handle)
         return self.move(file_id, 4)
@@ -563,7 +563,7 @@ class Mega:
         """
         Destroy a file by its url
         """
-        path = self._parse_url(url).split('!')
+        path = self._parse_url(url).split('#')
         public_handle = path[0]
         file_id = self.get_id_from_public_handle(public_handle)
         return self.destroy(file_id)
@@ -660,7 +660,7 @@ class Mega:
         """
         Download a file by it's public url
         """
-        path = self._parse_url(url).split('!')
+        path = self._parse_url(url).split('#')
         file_id = path[0]
         file_key = path[1]
         return self._download_file(
@@ -1042,14 +1042,14 @@ class Mega:
         """
         Get size and name from a public url, dict returned
         """
-        file_handle, file_key = self._parse_url(url).split('!')
+        file_handle, file_key = self._parse_url(url).split('#')
         return self.get_public_file_info(file_handle, file_key)
 
     def import_public_url(self, url, dest_node=None, dest_name=None):
         """
         Import the public url into user account
         """
-        file_handle, file_key = self._parse_url(url).split('!')
+        file_handle, file_key = self._parse_url(url).split('#')
         return self.import_public_file(
             file_handle, file_key, dest_node=dest_node, dest_name=dest_name
         )
