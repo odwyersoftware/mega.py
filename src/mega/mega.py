@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 class Mega:
     def __init__(self, options=None):
         self.schema = 'https'
-        self.domain = 'mega.co.nz'
+        self.domain = 'mega.nz'
         self.timeout = 160  # max secs to wait for resp from api requests
         self.sid = None
         self.sequence_num = random.randint(0, 0xFFFFFFFF)
@@ -758,6 +758,7 @@ class Mega:
                     block = chunk[i:i + 16]
                     encryptor.encrypt(block)
 
+            temp_output_file.close()
                 # fix for files under 16 bytes failing
                 if file_size > 16:
                     i += 16
