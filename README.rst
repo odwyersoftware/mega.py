@@ -1,7 +1,4 @@
-**NOTICE**: If you're reading this on GitHub.com please be aware this is
-a mirror of the primary remote located at https://code.richard.do/richardARPANET/mega.py_. Please direct issues and
-pull requests there.
-
+Since the maintainer doesn't maintain I'll be updating the libraries myself so don't expect fast updates I will update if I see some issues you can just pull a requests here for issues
 --------------
 
 .. _megapy:
