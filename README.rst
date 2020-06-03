@@ -1,6 +1,4 @@
-**NOTICE**: If you're reading this on GitHub.com please be aware this is
-a mirror of the primary remote located at https://code.richard.do/richardARPANET/mega.py_. Please direct issues and
-pull requests there.
+**NOTICE**: Since the maintainers suddenly stopped or should I say lazyAF I decided to maintain this so don't expect fast updates, you can pull requests if you want.
 
 --------------
 
