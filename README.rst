@@ -1,4 +1,4 @@
-Since the maintainer doesn't maintain I'll be updating the libraries myself so don't expect fast updates I will update if I see some issues you can just pull a requests here for issues
+***NOTICE:Since the maintainer doesn't maintain I'll be updating the libraries myself so don't expect fast updates I will update if I see some issues you can just pull a requests here for issues
 --------------
 
 .. _megapy:
