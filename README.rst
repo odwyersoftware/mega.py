@@ -9,7 +9,7 @@ Mega.py
 
 |Build Status| |Downloads|
 
-Python library for the `Mega.co.nz <https://mega.nz/aff=Zo6IxNaHw14>`_ API, currently supporting:
+Python library for the `Mega.nz <https://mega.nz/aff=Zo6IxNaHw14>`_ API, currently supporting:
 
 -  login
 -  uploading
@@ -32,7 +32,7 @@ How To Use
 Create a Mega account
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-First, `create an account with Mega <https://mega.nz/aff=Zo6IxNaHw14>`_
+First, create an account with Mega 
 .
 
 .. _install-megapy-package:
