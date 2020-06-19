@@ -342,7 +342,7 @@ class Mega:
                     ):
                         continue
                     return file
-            if (filename and file[1]['a'] and file[1]['a']['n'] == filename):
+            elif (filename and file[1]['a'] and file[1]['a']['n'] == filename):
                 if (
                     exclude_deleted
                     and self._trash_folder_node_id == file[1]['p']
