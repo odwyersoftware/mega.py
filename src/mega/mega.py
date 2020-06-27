@@ -322,7 +322,8 @@ class Mega:
             return files[handle]
         path = Path(filename)
         filename = path.name
-        parent_dir_name = path.parent.name
+        parent_path = path.parent
+        parent_dir_name = str(parent_path) if parent_path.name else ""
         for file in list(files.items()):
             parent_node_id = None
             try:
