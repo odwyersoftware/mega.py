@@ -13,6 +13,7 @@ import random
 import binascii
 import tempfile
 import shutil
+import httpx
 
 import requests
 from tenacity import retry, wait_exponential, retry_if_exception_type
@@ -796,7 +797,8 @@ class Mega:
 
                     # encrypt file and upload
                     chunk = aes.encrypt(chunk)
-                    output_file = requests.post(ul_url + "/" +
+                    async with httpx.AsyncClient() as client:
+                        output_file = await client.post(ul_url + "/" +
                                                 str(chunk_start),
                                                 data=chunk,
                                                 timeout=self.timeout)
@@ -804,7 +806,8 @@ class Mega:
                     logger.info('%s of %s uploaded', upload_progress,
                                 file_size)
             else:
-                output_file = requests.post(ul_url + "/0",
+                async with httpx.AsyncClient() as client:
+                    output_file = client.post(ul_url + "/0",
                                             data='',
                                             timeout=self.timeout)
                 completion_file_handle = output_file.text
