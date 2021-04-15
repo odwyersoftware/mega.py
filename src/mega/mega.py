@@ -797,7 +797,7 @@ class Mega:
                     # encrypt file and upload
                     chunk = aes.encrypt(chunk)
                     async with self.client:
-                        output_file = await client.post(ul_url + "/" +
+                        output_file = await self.client.post(ul_url + "/" +
                                                 str(chunk_start),
                                                 data=chunk,
                                                 timeout=self.timeout)
@@ -806,7 +806,7 @@ class Mega:
                                 file_size)
             else:
                 async with self.client:
-                    output_file = client.post(ul_url + "/0",
+                    output_file = self.client.post(ul_url + "/0",
                                             data='',
                                             timeout=self.timeout)
                 completion_file_handle = output_file.text
