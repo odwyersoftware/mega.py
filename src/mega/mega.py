@@ -152,7 +152,7 @@ class Mega:
 
     @retry(retry=retry_if_exception_type(RuntimeError),
            wait=wait_exponential(multiplier=2, min=2, max=60))
-    async def _api_request(self, data):
+    def _api_request(self, data):
         params = {'id': self.sequence_num}
         self.sequence_num += 1
 
@@ -164,13 +164,13 @@ class Mega:
             data = [data]
 
         url = f'{self.schema}://g.api.{self.domain}/cs'
-        async with self.client as client:
-            response = client.post(
-                url,
-                params=params,
-                data=json.dumps(data),
-                timeout=self.timeout,
-            )
+
+        response = requests.post(
+            url,
+            params=params,
+            data=json.dumps(data),
+            timeout=self.timeout,
+        )
         json_resp = json.loads(response.text)
         try:
             if isinstance(json_resp, list):
@@ -759,7 +759,7 @@ class Mega:
         # request upload url, call 'u' method
         with open(filename, 'rb') as input_file:
             file_size = os.path.getsize(filename)
-            ul_url = await self._api_request({'a': 'u', 's': file_size})['p']
+            ul_url = self._api_request({'a': 'u', 's': file_size})['p']
             # generate random aes key (128) for file
             ul_key = [random.randint(0, 0xFFFFFFFF) for _ in range(6)]
             k_str = a32_to_str(ul_key[:4])
@@ -806,8 +806,8 @@ class Mega:
                     logger.info('%s of %s uploaded', upload_progress,
                                 file_size)
             else:
-                async with self.client as client:
-                    output_file = client.post(ul_url + "/0",
+                async with self.client:
+                    output_file = await client.post(ul_url + "/0",
                                             data='',
                                             timeout=self.timeout)
                 completion_file_handle = output_file.text
@@ -833,7 +833,7 @@ class Mega:
             encrypted_key = a32_to_base64(encrypt_key(key, self.master_key))
             logger.info('Sending request to update attributes')
             # update attributes
-            data = await self._api_request({
+            data = self._api_request({
                 'a':
                 'p',
                 't':
