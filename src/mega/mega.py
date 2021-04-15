@@ -286,7 +286,7 @@ class Mega:
                 shared_keys[s_item['u']][s_item['h']] = ok_dict[s_item['h']]
         self.shared_keys = shared_keys
 
-    def find_path_descriptor(self, path, files=(),  parent = None):
+    def find_path_descriptor(self, path, parent = None, files=()):
         """
         Find descriptor of folder inside a path. i.e.: folder1/folder2/folder3
         Params:
@@ -304,7 +304,6 @@ class Mega:
                 for file in files.items():
 
                     if (file[1]['a'] and file[1]['t'] and file[1]['a']['n'] == foldername):
-
                         if parent_desc == file[1]['p']:
                             parent_desc = file[0]
                             found = True
@@ -747,7 +746,7 @@ class Mega:
             shutil.move(temp_output_file.name, output_path)
             return output_path
 
-    def upload(self, filename, dest=None, dest_filename=None):
+    async def upload(self, filename, dest=None, dest_filename=None):
         # determine storage node
         if dest is None:
             # if none set, upload to cloud drive node
