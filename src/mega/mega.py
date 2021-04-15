@@ -37,7 +37,7 @@ class Mega:
         self.sequence_num = random.randint(0, 0xFFFFFFFF)
         self.request_id = make_id(10)
         self._trash_folder_node_id = None
-
+        self.client = httpx.AsyncClient()
         if options is None:
             options = {}
         self.options = options
@@ -759,7 +759,6 @@ class Mega:
         with open(filename, 'rb') as input_file:
             file_size = os.path.getsize(filename)
             ul_url = self._api_request({'a': 'u', 's': file_size})['p']
-
             # generate random aes key (128) for file
             ul_key = [random.randint(0, 0xFFFFFFFF) for _ in range(6)]
             k_str = a32_to_str(ul_key[:4])
@@ -797,7 +796,7 @@ class Mega:
 
                     # encrypt file and upload
                     chunk = aes.encrypt(chunk)
-                    async with httpx.AsyncClient() as client:
+                    async with self.client:
                         output_file = await client.post(ul_url + "/" +
                                                 str(chunk_start),
                                                 data=chunk,
@@ -806,7 +805,7 @@ class Mega:
                     logger.info('%s of %s uploaded', upload_progress,
                                 file_size)
             else:
-                async with httpx.AsyncClient() as client:
+                async with self.client:
                     output_file = client.post(ul_url + "/0",
                                             data='',
                                             timeout=self.timeout)
