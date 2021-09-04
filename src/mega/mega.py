@@ -169,6 +169,10 @@ class Mega:
             data=json.dumps(data),
             timeout=self.timeout,
         )
+
+        # If the response was successful, no Exception will be raised
+        response.raise_for_status()
+
         json_resp = json.loads(response.text)
         try:
             if isinstance(json_resp, list):
@@ -692,7 +696,12 @@ class Mega:
         else:
             file_name = attribs['n']
 
-        input_file = requests.get(file_url, stream=True).raw
+        response = requests.get(file_url, stream=True)
+        
+        # If the response was successful, no Exception will be raised
+        response.raise_for_status()
+        
+        input_file = response.raw
 
         if dest_path is None:
             dest_path = ''
@@ -799,6 +808,9 @@ class Mega:
                                                 str(chunk_start),
                                                 data=chunk,
                                                 timeout=self.timeout)
+                    # If the response was successful, no Exception will be raised
+                    output_file.raise_for_status()
+
                     completion_file_handle = output_file.text
                     logger.info('%s of %s uploaded', upload_progress,
                                 file_size)
@@ -806,6 +818,10 @@ class Mega:
                 output_file = requests.post(ul_url + "/0",
                                             data='',
                                             timeout=self.timeout)
+
+                # If the response was successful, no Exception will be raised
+                output_file.raise_for_status()
+
                 completion_file_handle = output_file.text
 
             logger.info('Chunks uploaded')
