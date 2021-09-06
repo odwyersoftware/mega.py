@@ -1,10 +1,6 @@
 Mega.py
 =======
 
-[![Build
-Status](https://travis-ci.org/odwyersoftware/mega.py.png?branch=master)](https://travis-ci.org/odwyersoftware/mega.py)
-[![Downloads](https://pypip.in/d/mega.py/badge.png)](https://crate.io/packages/mega.py/)  [![PyPI version](https://badge.fury.io/py/mega.py.svg)](https://pypi.org/project/mega.py/)
-
 Python library for the [Mega.co.nz](https://mega.nz/aff=Zo6IxNaHw14)
 API, currently supporting:
 
