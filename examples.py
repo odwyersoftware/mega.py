@@ -40,6 +40,9 @@ def test():
     print((m.upload(filename='examples.py',
                     dest_filename=f'examples_{unique}.py')))
 
+    with open('examples.py', 'rb') as input_file:
+        print((m.upload(input_file=input_file, dest_filename='examples.py', file_size=os.path.getsize('examples.py'))))
+
     # search for a file in account
     file = m.find(f'examples_{unique}.py')
 
@@ -51,6 +54,9 @@ def test():
         # download file. by file object or url
         print(m.download(file, '/tmp'))
         # m.download_url(link)
+
+        with open(f'/tmp/examples_{unique}.py', 'wb') as output_file:
+            print(m.download(file, output_file=output_file))
 
         # delete or destroy file. by id or url
         print((m.delete(file[0])))
