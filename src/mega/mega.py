@@ -15,6 +15,8 @@ import tempfile
 import shutil
 
 import requests
+import tqdm
+
 from tenacity import retry, wait_exponential, retry_if_exception_type
 
 from .errors import ValidationError, RequestError
@@ -702,48 +704,51 @@ class Mega:
         with tempfile.NamedTemporaryFile(mode='w+b',
                                          prefix='megapy_',
                                          delete=False) as temp_output_file:
-            k_str = a32_to_str(k)
-            counter = Counter.new(128,
-                                  initial_value=((iv[0] << 32) + iv[1]) << 64)
-            aes = AES.new(k_str, AES.MODE_CTR, counter=counter)
+            with tqdm.tqdm(total=file_size, unit='iB', unit_scale=True) as progress_bar:
+                k_str = a32_to_str(k)
+                counter = Counter.new(128,
+                                      initial_value=((iv[0] << 32) + iv[1]) << 64)
+                aes = AES.new(k_str, AES.MODE_CTR, counter=counter)
 
-            mac_str = '\0' * 16
-            mac_encryptor = AES.new(k_str, AES.MODE_CBC,
-                                    mac_str.encode("utf8"))
-            iv_str = a32_to_str([iv[0], iv[1], iv[0], iv[1]])
+                mac_str = '\0' * 16
+                mac_encryptor = AES.new(k_str, AES.MODE_CBC,
+                                        mac_str.encode("utf8"))
+                iv_str = a32_to_str([iv[0], iv[1], iv[0], iv[1]])
 
-            for chunk_start, chunk_size in get_chunks(file_size):
-                chunk = input_file.read(chunk_size)
-                chunk = aes.decrypt(chunk)
-                temp_output_file.write(chunk)
+                for chunk_start, chunk_size in get_chunks(file_size):
+                    # print('Chunk size from generator: '+chunk_size)
+                    chunk = input_file.read(chunk_size)
+                    chunk = aes.decrypt(chunk)
+                    temp_output_file.write(chunk)
+                    progress_bar.update(len(chunk))
 
-                encryptor = AES.new(k_str, AES.MODE_CBC, iv_str)
-                for i in range(0, len(chunk) - 16, 16):
+                    encryptor = AES.new(k_str, AES.MODE_CBC, iv_str)
+                    for i in range(0, len(chunk) - 16, 16):
+                        block = chunk[i:i + 16]
+                        encryptor.encrypt(block)
+
+                    # fix for files under 16 bytes failing
+                    if file_size > 16:
+                        i += 16
+                    else:
+                        i = 0
+
                     block = chunk[i:i + 16]
-                    encryptor.encrypt(block)
+                    if len(block) % 16:
+                        block += b'\0' * (16 - (len(block) % 16))
+                    mac_str = mac_encryptor.encrypt(encryptor.encrypt(block))
 
-                # fix for files under 16 bytes failing
-                if file_size > 16:
-                    i += 16
-                else:
-                    i = 0
-
-                block = chunk[i:i + 16]
-                if len(block) % 16:
-                    block += b'\0' * (16 - (len(block) % 16))
-                mac_str = mac_encryptor.encrypt(encryptor.encrypt(block))
-
-                file_info = os.stat(temp_output_file.name)
-                logger.info('%s of %s downloaded', file_info.st_size,
-                            file_size)
-            file_mac = str_to_a32(mac_str)
-            # check mac integrity
-            if (file_mac[0] ^ file_mac[1],
-                    file_mac[2] ^ file_mac[3]) != meta_mac:
-                raise ValueError('Mismatched mac')
-            output_path = Path(dest_path + file_name)
-            shutil.move(temp_output_file.name, output_path)
-            return output_path
+                    # file_info = os.stat(temp_output_file.name)
+                    # logger.info('%s of %s downloaded', file_info.st_size,
+                    #             file_size)
+                file_mac = str_to_a32(mac_str)
+                # check mac integrity
+                if (file_mac[0] ^ file_mac[1],
+                        file_mac[2] ^ file_mac[3]) != meta_mac:
+                    raise ValueError('Mismatched mac')
+                output_path = Path(dest_path + file_name)
+                shutil.move(temp_output_file.name, output_path)
+                return output_path
 
     def upload(self, filename, dest=None, dest_filename=None):
         # determine storage node
