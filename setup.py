@@ -40,4 +40,10 @@ setup(name='mega.py',
           'Programming Language :: Python',
           'Programming Language :: Python :: 3',
           'Topic :: Internet :: WWW/HTTP',
-      ])
+      ],
+      entry_points={
+          'console_scripts': [
+              'meganz=mega.maincli:maincli'
+          ]
+      },
+      )
