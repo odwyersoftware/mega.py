@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-from __future__ import absolute_import
-
 import os
 from codecs import open
 
@@ -22,6 +20,7 @@ with open('HISTORY.md', 'r', encoding='utf-8') as hist_file:
 
 setup(name='mega.py',
       version='1.0.9.dev0',
+      python_requires='>=3.6',
       packages=find_packages('src', exclude=('tests', )),
       package_dir={'': 'src'},
       include_package_data=True,
