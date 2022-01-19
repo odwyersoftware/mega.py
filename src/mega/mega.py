@@ -32,7 +32,8 @@ logger = logging.getLogger(__name__)
 class Mega:
     def __init__(self, options=None):
         self.schema = 'https'
-        self.domain = 'mega.co.nz'
+        self.domain = 'mega.nz'
+        self.api_domain = 'mega.co.nz'  # g.api.mega.nz doesn't exist, have to use the old domain name for api access
         self.timeout = 160  # max secs to wait for resp from api requests
         self.sid = None
         self.sequence_num = random.randint(0, 0xFFFFFFFF)
@@ -164,7 +165,7 @@ class Mega:
         if not isinstance(data, list):
             data = [data]
 
-        url = f'{self.schema}://g.api.{self.domain}/cs'
+        url = f'{self.schema}://g.api.{self.api_domain}/cs'
         response = requests.post(
             url,
             params=params,
