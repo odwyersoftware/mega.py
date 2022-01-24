@@ -34,6 +34,12 @@ Run the following command, or run setup from the latest github source.
 pip install mega.py
 ```
 
+or, for installing after having cloned the repo:
+```sh
+cd mega.py
+pip install .
+```
+
 ### Import mega.py
 
 ```python
