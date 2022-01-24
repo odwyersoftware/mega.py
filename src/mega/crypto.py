@@ -85,7 +85,18 @@ def decrypt_attr(attr, key):
     attr = aes_cbc_decrypt(attr, a32_to_str(key))
     attr = makestring(attr)
     attr = attr.rstrip('\0')
-    return json.loads(attr[4:]) if attr[:6] == 'MEGA{"' else False
+
+    prefix = 'MEGA{"'
+    if attr.startswith(prefix):
+        i1 = 4
+        i2 = attr.find('}')
+        if i2 >= 0:
+            i2+=1
+            return json.loads(attr[i1:i2])
+        else:
+            raise RuntimeError(f'Unable to properly decode filename, raw content is: {attr}')
+    else:
+        return False
 
 
 def a32_to_str(a):
