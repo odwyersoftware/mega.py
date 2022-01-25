@@ -151,6 +151,8 @@ def a32_to_base64(a):
     return base64_url_encode(a32_to_str(a))
 
 
+# generates a list of chunks of the kind (offset, chunk_size), where offset refers to the file start
+# chunk_size starts at 0x20000 (100 KiB), and then increments linearly till saturation to 0x100000 (1 MiB)
 def get_chunks(size):
     p = 0
     s = 0x20000
