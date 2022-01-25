@@ -712,6 +712,7 @@ class Mega:
                                       initial_value=((iv[0] << 32) + iv[1]) << 64)
                 aes = AES.new(k_str, AES.MODE_CTR, counter=counter)
 
+                # mega.nz improperly uses CBC as a MAC mode, so after each chunk, the computed mac_bytes are used as IV for the next chunk MAC accumulation
                 mac_bytes = b'\0' * 16
                 mac_encryptor = AES.new(k_str, AES.MODE_CBC, mac_bytes)
                 iv_str = a32_to_str([iv[0], iv[1], iv[0], iv[1]])
@@ -727,6 +728,9 @@ class Mega:
                         accumulated_len = 0
 
                     encryptor = AES.new(k_str, AES.MODE_CBC, iv_str)
+                    # if file_size is less than 16 bytes:
+                    # - only a chunk is present in get_chunks generator loop
+                    # - the following for loop has no iterations
                     for i in range(0, len(chunk) - 16, 16):
                         block = chunk[i:i + 16]
                         encryptor.encrypt(block)
@@ -738,6 +742,9 @@ class Mega:
                         i = 0
 
                     block = chunk[i:i + 16]
+
+                    # since by design of get_chunks, chunk sizes are multiple of 131072 (and then, of 16),
+                    # no chunk except the last one (or the only one, in case of unique chunk) can enter this if block
                     if len(block) % 16:
                         block += b'\0' * (16 - (len(block) % 16))
                     mac_bytes = mac_encryptor.encrypt(encryptor.encrypt(block))
