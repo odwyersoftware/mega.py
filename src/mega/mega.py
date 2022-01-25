@@ -728,21 +728,21 @@ class Mega:
                         accumulated_len = 0
 
                     encryptor = AES.new(k_str, AES.MODE_CBC, iv_str)
-                    # if file_size is less than 16 bytes:
-                    # - only a chunk is present in get_chunks generator loop
-                    # - the following for loop has no iterations
-                    for i in range(0, len(chunk) - 16, 16):
-                        block = chunk[i:i + 16]
-                        encryptor.encrypt(block)
-
                     # fix for files under 16 bytes failing
-                    if file_size > 16:
-                        i += 16
-                    else:
+                    if file_size <= 16:
                         i = 0
+                    else:
+                        # if file_size is less than 16 bytes:
+                        # - only a chunk is present in get_chunks generator loop
+                        # - the following for loop has no iterations
+                        for i in range(0, len(chunk) - 16, 16):
+                            block = chunk[i:i + 16]
+                            encryptor.encrypt(block)
+                        i += 16
 
-                    block = chunk[i:i + 16]
+                    block = chunk[i:i + 16] # for >16 bytes chunks, the for loops exhausts the data, so that this expression evaluates to [] (empty list)
 
+                    # add padding
                     # since by design of get_chunks, chunk sizes are multiple of 131072 (and then, of 16),
                     # no chunk except the last one (or the only one, in case of unique chunk) can enter this if block
                     if len(block) % 16:
