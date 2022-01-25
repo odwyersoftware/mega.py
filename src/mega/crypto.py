@@ -7,6 +7,7 @@ import struct
 
 from Crypto.Cipher import AES
 
+EMPTY_IV = b'\0'*16
 
 def makebyte(x):
     return codecs.latin_1_encode(x)[0]
@@ -17,13 +18,11 @@ def makestring(x):
 
 
 def aes_cbc_encrypt(data, key):
-    aes_cipher = AES.new(key, AES.MODE_CBC, makebyte('\0' * 16))
-    return aes_cipher.encrypt(data)
+    return AES.new(key, AES.MODE_CBC, EMPTY_IV).encrypt(data)
 
 
 def aes_cbc_decrypt(data, key):
-    aes_cipher = AES.new(key, AES.MODE_CBC, makebyte('\0' * 16))
-    return aes_cipher.decrypt(data)
+    return AES.new(key, AES.MODE_CBC, EMPTY_IV).decrypt(data)
 
 
 def aes_cbc_encrypt_a32(data, key):

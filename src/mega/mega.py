@@ -795,8 +795,9 @@ class Mega:
                         i = 0
 
                     block = chunk[i:i + 16]
-                    if len(block) % 16:
-                        block += makebyte('\0' * (16 - len(block) % 16))
+                    modlenblock = len(block) % 16
+                    if modlenblock:
+                        block += (b'\0' * (16 - modlenblock))
                     mac_str = mac_encryptor.encrypt(encryptor.encrypt(block))
 
                     # encrypt file and upload
