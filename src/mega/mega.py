@@ -23,8 +23,8 @@ from .errors import ValidationError, RequestError
 from .crypto import (a32_to_base64, encrypt_key, base64_url_encode,
                      encrypt_attr, base64_to_a32, base64_url_decode,
                      decrypt_attr, a32_to_str, get_chunks, str_to_a32,
-                     decrypt_key, mpi_to_int, stringhash, prepare_key, make_id,
-                     makebyte, modular_inverse)
+                     decrypt_key, mpi_to_int, stringhash, prepare_key,
+                     make_id, modular_inverse)
 
 logger = logging.getLogger(__name__)
 
@@ -711,9 +711,8 @@ class Mega:
                                       initial_value=((iv[0] << 32) + iv[1]) << 64)
                 aes = AES.new(k_str, AES.MODE_CTR, counter=counter)
 
-                mac_str = '\0' * 16
-                mac_encryptor = AES.new(k_str, AES.MODE_CBC,
-                                        mac_str.encode("utf8"))
+                mac_bytes = b'\0' * 16
+                mac_encryptor = AES.new(k_str, AES.MODE_CBC, mac_bytes)
                 iv_str = a32_to_str([iv[0], iv[1], iv[0], iv[1]])
 
                 for chunk_start, chunk_size in get_chunks(file_size):
@@ -737,12 +736,12 @@ class Mega:
                     block = chunk[i:i + 16]
                     if len(block) % 16:
                         block += b'\0' * (16 - (len(block) % 16))
-                    mac_str = mac_encryptor.encrypt(encryptor.encrypt(block))
+                    mac_bytes = mac_encryptor.encrypt(encryptor.encrypt(block))
 
                     # file_info = os.stat(temp_output_file.name)
                     # logger.info('%s of %s downloaded', file_info.st_size,
                     #             file_size)
-                file_mac = str_to_a32(mac_str)
+                file_mac = str_to_a32(mac_bytes)
                 # check mac integrity
                 if (file_mac[0] ^ file_mac[1],
                         file_mac[2] ^ file_mac[3]) != meta_mac:
@@ -774,9 +773,8 @@ class Mega:
             upload_progress = 0
             completion_file_handle = None
 
-            mac_str = '\0' * 16
-            mac_encryptor = AES.new(k_str, AES.MODE_CBC,
-                                    mac_str.encode("utf8"))
+            mac_bytes = b'\0' * 16
+            mac_encryptor = AES.new(k_str, AES.MODE_CBC, mac_bytes)
             iv_str = a32_to_str([ul_key[4], ul_key[5], ul_key[4], ul_key[5]])
             if file_size > 0:
                 for chunk_start, chunk_size in get_chunks(file_size):
@@ -798,7 +796,7 @@ class Mega:
                     modlenblock = len(block) % 16
                     if modlenblock:
                         block += (b'\0' * (16 - modlenblock))
-                    mac_str = mac_encryptor.encrypt(encryptor.encrypt(block))
+                    mac_bytes = mac_encryptor.encrypt(encryptor.encrypt(block))
 
                     # encrypt file and upload
                     chunk = aes.encrypt(chunk)
@@ -818,7 +816,7 @@ class Mega:
             logger.info('Chunks uploaded')
             logger.info('Setting attributes to complete upload')
             logger.info('Computing attributes')
-            file_mac = str_to_a32(mac_str)
+            file_mac = str_to_a32(mac_bytes)
 
             # determine meta mac
             meta_mac = (file_mac[0] ^ file_mac[1], file_mac[2] ^ file_mac[3])
