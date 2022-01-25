@@ -706,6 +706,7 @@ class Mega:
                                          prefix='megapy_',
                                          delete=False) as temp_output_file:
             with tqdm.tqdm(total=file_size, unit='iB', unit_scale=True) as progress_bar:
+                accumulated_len = 0
                 k_str = a32_to_str(k)
                 counter = Counter.new(128,
                                       initial_value=((iv[0] << 32) + iv[1]) << 64)
@@ -720,7 +721,10 @@ class Mega:
                     chunk = input_file.read(chunk_size)
                     chunk = aes.decrypt(chunk)
                     temp_output_file.write(chunk)
-                    progress_bar.update(len(chunk))
+                    accumulated_len += len(chunk)
+                    if accumulated_len > 4000000:
+                        progress_bar.update(accumulated_len)
+                        accumulated_len = 0
 
                     encryptor = AES.new(k_str, AES.MODE_CBC, iv_str)
                     for i in range(0, len(chunk) - 16, 16):
