@@ -702,18 +702,10 @@ class Mega:
         else:
             dest_path += '/'
 
-        # TODO within each chunk
-        # encryptor.encrypt(all chunk except last 16 - n bytes, when not exact multiple of 16)
-        # pad last 16 - N bytes to 16 -> last_block_with_padding
-        # encryptor.encrypt(last_block_with_padding) -> output_for_mac
-        # mac_encryptor.encrypt(output_for_mac)
-        # TODO have to cut down the chunk and remove last block (and use it in the final MAC calculation step)
-
         with tempfile.NamedTemporaryFile(mode='w+b',
                                          prefix='megapy_',
                                          delete=False) as temp_output_file:
             with tqdm.tqdm(total=file_size, unit='iB', unit_scale=True) as progress_bar:
-                accumulated_len = 0
                 k_str = a32_to_str(k)
                 counter = Counter.new(128,
                                       initial_value=((iv[0] << 32) + iv[1]) << 64)
@@ -729,10 +721,7 @@ class Mega:
                     chunk = input_file.read(chunk_size)
                     chunk = aes.decrypt(chunk)
                     temp_output_file.write(chunk)
-                    accumulated_len += len(chunk)
-                    if accumulated_len > 4000000:
-                        progress_bar.update(accumulated_len)
-                        accumulated_len = 0
+                    progress_bar.update(len(chunk))
 
                     encryptor = AES.new(k_str, AES.MODE_CBC, iv_str)
 
