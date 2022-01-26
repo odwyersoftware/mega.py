@@ -702,6 +702,13 @@ class Mega:
         else:
             dest_path += '/'
 
+        # TODO within each chunk
+        # encryptor.encrypt(all chunk except last 16 - n bytes, when not exact multiple of 16)
+        # pad last 16 - N bytes to 16 -> last_block_with_padding
+        # encryptor.encrypt(last_block_with_padding) -> output_for_mac
+        # mac_encryptor.encrypt(output_for_mac)
+        # TODO have to cut down the chunk and remove last block (and use it in the final MAC calculation step)
+
         with tempfile.NamedTemporaryFile(mode='w+b',
                                          prefix='megapy_',
                                          delete=False) as temp_output_file:
@@ -729,13 +736,20 @@ class Mega:
 
                     encryptor = AES.new(k_str, AES.MODE_CBC, iv_str)
 
-                    # add padding for MAC calculation via AES-CBC
-                    # FIXME causes Mismatched MAC error
+                    # take last 16-N bytes from chunk (with N between 1 and 16, including extremes)
+                    mv = memoryview(chunk) # avoid copying memory for the entire chunk when slicing
                     modchunk = len(chunk) % 16
-                    if modchunk > 0:
-                        chunk += b'\0' * (16 - modchunk)
-                    chunk = encryptor.encrypt(chunk)
-                    mac_bytes = mac_encryptor.encrypt(chunk)
+                    if modchunk == 0:
+                        # ensure we reserve the last 16 bytes anyway, we have to feed them into mac_encryptor
+                        modchunk = 16
+                        last_block = chunk[-modchunk:] # fine to copy bytes here, they're only a few bytes
+                    else:
+                        last_block = chunk[-modchunk:] + (b'\0' * (16 - modchunk)) # pad last block to 16 bytes
+                    rest_of_chunk = mv[:-modchunk]
+
+                    encryptor.encrypt(rest_of_chunk)
+                    input_to_mac = encryptor.encrypt(last_block)
+                    mac_bytes = mac_encryptor.encrypt(input_to_mac)
 
                     # file_info = os.stat(temp_output_file.name)
                     # logger.info('%s of %s downloaded', file_info.st_size,
