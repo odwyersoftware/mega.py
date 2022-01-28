@@ -413,7 +413,8 @@ class Mega:
         else:
             raise ValidationError('File id and key must be present')
 
-    def _node_data(self, node):
+    @staticmethod
+    def _node_data(node):
         try:
             return node[1]
         except (IndexError, KeyError):
@@ -479,7 +480,8 @@ class Mega:
         node_id = self.get_id_from_obj(node_data)
         return node_id
 
-    def get_id_from_obj(self, node_data):
+    @staticmethod
+    def get_id_from_obj(node_data):
         """
         Get node id from a file object
         """
