@@ -652,7 +652,7 @@ class Mega:
         nodes = self.get_files()
         return self.get_folder_link(nodes[node_id])
 
-    def download_url(self, url, dest_path=None, dest_filename=None):
+    def download_url(self, url, dest_path=None, dest_filename=None, no_temp_file=False):
         """
         Download a file by it's public url
         """
@@ -665,6 +665,7 @@ class Mega:
             dest_path=dest_path,
             dest_filename=dest_filename,
             is_public=True,
+            no_temp_file=no_temp_file
         )
 
     def _download_file(self,
@@ -673,7 +674,8 @@ class Mega:
                        dest_path=None,
                        dest_filename=None,
                        is_public=False,
-                       file=None):
+                       file=None,
+                       no_temp_file=False):
         if file is None:
             if is_public:
                 file_key = base64_to_a32(file_key)
@@ -720,10 +722,11 @@ class Mega:
             dest_path = ''
         else:
             dest_path += '/'
+        output_path = Path(dest_path + file_name)
 
-        with tempfile.NamedTemporaryFile(mode='w+b',
+        with (tempfile.NamedTemporaryFile(mode='w+b',
                                          prefix='megapy_',
-                                         delete=False) as temp_output_file:
+                                         delete=False) if not no_temp_file else open(output_path, 'xb')) as temp_output_file:
             with tqdm.tqdm(total=file_size, unit='iB', unit_scale=True) as progress_bar:
                 k_str = a32_to_str(k)
                 counter = Counter.new(128,
@@ -768,8 +771,9 @@ class Mega:
                         file_mac[2] ^ file_mac[3]) != meta_mac:
                     raise ValueError('Mismatched mac')
                 output_name = temp_output_file.name
-        output_path = Path(dest_path + file_name)
-        shutil.move(output_name, output_path)
+        if not no_temp_file:
+            print('Moving temporary file to destination path')
+            shutil.move(output_name, output_path)
         return output_path
 
     def upload(self, filename, dest=None, dest_filename=None):
