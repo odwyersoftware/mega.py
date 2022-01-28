@@ -440,7 +440,7 @@ class Mega:
         user_data = self._api_request({'a': 'ug'})
         return user_data
 
-    def get_node_by_type(self, type):
+    def get_node_by_type(self, node_type):
         """
         Get a node by it's numeric type id, e.g:
         0: file
@@ -451,7 +451,7 @@ class Mega:
         """
         nodes = self.get_files()
         for node in list(nodes.items()):
-            if node[1]['t'] == type:
+            if node[1]['t'] == node_type:
                 return node
 
     def get_files_in_node(self, target):

@@ -33,8 +33,8 @@ def aes_cbc_decrypt_a32(data, key):
     return str_to_a32(aes_cbc_decrypt(a32_to_str(data), a32_to_str(key)))
 
 
-def stringhash(str, aeskey):
-    s32 = str_to_a32(str)
+def stringhash(s, aeskey):
+    s32 = str_to_a32(s)
     h32 = [0, 0, 0, 0]
     for i in range(len(s32)):
         h32[i % 4] ^= s32[i]
