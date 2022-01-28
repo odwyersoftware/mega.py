@@ -346,7 +346,6 @@ class Mega:
         filename = path.name
         parent_dir_name = path.parent.name
         for file in list(files.items()):
-            parent_node_id = None
             try:
                 if parent_dir_name:
                     parent_node_id = self.find_path_descriptor(parent_dir_name,
