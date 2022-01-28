@@ -57,7 +57,6 @@ class Mega:
         logger.info('Logging in user...')
         email = email.lower()
         get_user_salt_resp = self._api_request({'a': 'us0', 'user': email})
-        user_salt = None
         try:
             user_salt = base64_to_a32(get_user_salt_resp['s'])
         except KeyError:
