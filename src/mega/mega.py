@@ -191,8 +191,27 @@ class Mega:
             raise RequestError(int_resp)
         return json_resp[0]
 
-    def _parse_url(self, url):
-        """Parse file id and key from url."""
+    def _is_mega_link(self, url: str):
+        return url.startswith(f'{self.schema}://{self.domain}') or url.startswith(f'{self.schema}://{self.api_domain}')
+
+    def _follow_redirects(self, url: str):
+        for i in range(10):
+            if self._is_mega_link(url):
+                return url
+            resp = requests.get(url, allow_redirects=False)
+            if resp.is_redirect or resp.is_permanent_redirect:
+                url = resp.headers['Location']
+                print(f'Found redirect: {url}')
+                continue
+            else:
+                raise RuntimeError('Url is not a redirect nor a mega link')
+        raise RuntimeError('Too many redirects')
+
+    def _parse_url(self, url: str):
+        # Parse file id and key from url.
+        # Follow redirects from URL shortening services, if any
+        url = self._follow_redirects(url)
+
         if '/file/' in url:
             # V2 URL structure
             url = url.replace(' ', '')
