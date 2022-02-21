@@ -56,6 +56,8 @@ def prepare_key(arr):
 
 
 def encrypt_key(a, key):
+	# this sum, which is applied to a generator of tuples, actually flattens the output list of lists of that generator
+	# i.e. it's equivalent to tuple([item for t in generatorOfLists for item in t])
     return sum((aes_cbc_encrypt_a32(a[i:i + 4], key)
                 for i in range(0, len(a), 4)), ())
 
