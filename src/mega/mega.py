@@ -302,7 +302,7 @@ class Mega:
         for foldername in paths:
             if foldername != '':
                 for file in files.items():
-                    if type(file[1]['a'])=='dict':
+                    if type(file[1]['a'])==type({}):
                         if (file[1]['a'] and file[1]['t']
                                 and file[1]['a']['n'] == foldername):
                             if parent_desc == file[1]['p']:
