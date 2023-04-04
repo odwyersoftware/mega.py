@@ -11,10 +11,6 @@ Learn how to use it: https://github.com/meganz/MEGAcmd/blob/master/UserGuide.md
 Mega.py
 =======
 
-[![Build
-Status](https://travis-ci.org/odwyersoftware/mega.py.png?branch=master)](https://travis-ci.org/odwyersoftware/mega.py)
-[![Downloads](https://pypip.in/d/mega.py/badge.png)](https://crate.io/packages/mega.py/)  [![PyPI version](https://badge.fury.io/py/mega.py.svg)](https://pypi.org/project/mega.py/)
-
 Python library for the [Mega.co.nz](https://mega.nz/aff=Zo6IxNaHw14)
 API, currently supporting:
 
@@ -128,6 +124,12 @@ folder = m.find('my_mega_folder')
 m.upload('myfile.doc', folder[0])
 ```
 
+### Upload a file with a python file object
+```python
+with open('myfile.doc', 'rb') as input_file:
+    file = m.upload(input_file=input_file, dest_filename='mydoc.doc', file_size=os.path.getsize('mydoc.doc'))
+```
+
 ### Download a file from URL or file obj, optionally specify destination folder
 
 ```python
@@ -137,6 +139,12 @@ m.download_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3
 m.download(file, '/home/john-smith/Desktop')
 # specify optional download filename (download_url() supports this also)
 m.download(file, '/home/john-smith/Desktop', 'myfile.zip')
+```
+
+### Download a file with a python file object
+```python
+with open(f'examples.txt', 'wb') as output_file:
+    print(m.download(file, output_file=output_file))
 ```
 
 ### Import a file from URL, optionally specify destination folder
@@ -171,8 +179,5 @@ file = m.find('myfile.doc')
 m.rename(file, 'my_file.doc')
 ```
 
-## Contact Support
-
-For paid priority support contact [mega@odwyer.software](mailto:mega@odwyer.software).
-
-**[UK Python Development Agency](https://odwyer.software/)**
+## Original version
+[odwyersoftware](https://github.com/odwyersoftware/mega.py)

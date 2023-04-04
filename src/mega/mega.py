@@ -169,6 +169,10 @@ class Mega:
             data=json.dumps(data),
             timeout=self.timeout,
         )
+
+        # If the response was successful, no Exception will be raised
+        response.raise_for_status()
+
         json_resp = json.loads(response.text)
         try:
             if isinstance(json_resp, list):
@@ -557,7 +561,7 @@ class Mega:
                 post_list.append({"a": "d", "n": file, "i": self.request_id})
             return self._api_request(post_list)
 
-    def download(self, file, dest_path=None, dest_filename=None):
+    def download(self, file, dest_path=None, dest_filename=None, output_file=None):
         """
         Download a file by it's file object
         """
@@ -566,7 +570,8 @@ class Mega:
                                    file=file[1],
                                    dest_path=dest_path,
                                    dest_filename=dest_filename,
-                                   is_public=False)
+                                   is_public=False,
+                                   output_file=output_file)
 
     def _export_file(self, node):
         node_data = self._node_data(node)
@@ -630,7 +635,7 @@ class Mega:
         nodes = self.get_files()
         return self.get_folder_link(nodes[node_id])
 
-    def download_url(self, url, dest_path=None, dest_filename=None):
+    def download_url(self, url, dest_path=None, dest_filename=None, output_file=None):
         """
         Download a file by it's public url
         """
@@ -643,6 +648,7 @@ class Mega:
             dest_path=dest_path,
             dest_filename=dest_filename,
             is_public=True,
+            output_file=output_file
         )
 
     def _download_file(self,
@@ -651,7 +657,8 @@ class Mega:
                        dest_path=None,
                        dest_filename=None,
                        is_public=False,
-                       file=None):
+                       file=None,
+                       output_file=None):
         if file is None:
             if is_public:
                 file_key = base64_to_a32(file_key)
@@ -692,30 +699,121 @@ class Mega:
         else:
             file_name = attribs['n']
 
-        input_file = requests.get(file_url, stream=True).raw
+        response = requests.get(file_url, stream=True)
+        
+        # If the response was successful, no Exception will be raised
+        response.raise_for_status()
+        
+        input_file = response.raw
 
         if dest_path is None:
             dest_path = ''
         else:
             dest_path += '/'
 
-        with tempfile.NamedTemporaryFile(mode='w+b',
-                                         prefix='megapy_',
-                                         delete=False) as temp_output_file:
-            k_str = a32_to_str(k)
-            counter = Counter.new(128,
-                                  initial_value=((iv[0] << 32) + iv[1]) << 64)
-            aes = AES.new(k_str, AES.MODE_CTR, counter=counter)
+        k_str = a32_to_str(k)
+        counter = Counter.new(128,
+                              initial_value=((iv[0] << 32) + iv[1]) << 64)
+        aes = AES.new(k_str, AES.MODE_CTR, counter=counter)
 
-            mac_str = '\0' * 16
-            mac_encryptor = AES.new(k_str, AES.MODE_CBC,
-                                    mac_str.encode("utf8"))
-            iv_str = a32_to_str([iv[0], iv[1], iv[0], iv[1]])
+        mac_str = '\0' * 16
+        mac_encryptor = AES.new(k_str, AES.MODE_CBC,
+                            mac_str.encode("utf8"))
+        iv_str = a32_to_str([iv[0], iv[1], iv[0], iv[1]])
+            
+        if not output_file:
+            output_file = tempfile.NamedTemporaryFile(
+                mode='w+b',
+                prefix='megapy_',
+                delete=False
+            )
+            should_move = 1
+        else:
+            should_move = 0
 
+        st_size = 0
+
+        for chunk_start, chunk_size in get_chunks(file_size):
+            chunk = input_file.read(chunk_size)
+            chunk = aes.decrypt(chunk)
+            output_file.write(chunk)
+            st_size += chunk_size
+
+            encryptor = AES.new(k_str, AES.MODE_CBC, iv_str)
+            for i in range(0, len(chunk) - 16, 16):
+                block = chunk[i:i + 16]
+                encryptor.encrypt(block)
+
+            # fix for files under 16 bytes failing
+            if file_size > 16:
+                i += 16
+            else:
+                i = 0
+
+            block = chunk[i:i + 16]
+            if len(block) % 16:
+                block += b'\0' * (16 - (len(block) % 16))
+            mac_str = mac_encryptor.encrypt(encryptor.encrypt(block))
+
+            logger.info('%s of %s downloaded', st_size,
+                        file_size)
+
+        # We close the file
+        # It's important
+        output_file.close()
+        
+        file_mac = str_to_a32(mac_str)
+        # check mac integrity
+        if (file_mac[0] ^ file_mac[1],
+                file_mac[2] ^ file_mac[3]) != meta_mac:
+            raise ValueError('Mismatched mac')
+
+
+        if should_move:
+            output_path = Path(dest_path + file_name)
+            shutil.move(output_file.name, output_path)
+            return output_path
+
+
+    def upload(self, filename=None, dest=None, dest_filename=None, input_file=None, file_size=None):
+        # verification of arguments
+        if filename or (dest_filename and input_file and file_size is not None):
+            pass
+        else:
+            raise Exception("You should either filename or (input_file and file_size)")
+
+        # determine storage node
+        if dest is None:
+            # if none set, upload to cloud drive node
+            if not hasattr(self, 'root_id'):
+                self.get_files()
+            dest = self.root_id
+
+        # request upload url, call 'u' method
+        if not input_file:
+            input_file = open(filename, 'rb')
+            file_size = os.path.getsize(filename)
+
+        ul_url = self._api_request({'a': 'u', 's': file_size})['p']
+
+        # generate random aes key (128) for file
+        ul_key = [random.randint(0, 0xFFFFFFFF) for _ in range(6)]
+        k_str = a32_to_str(ul_key[:4])
+        count = Counter.new(
+            128, initial_value=((ul_key[4] << 32) + ul_key[5]) << 64)
+        aes = AES.new(k_str, AES.MODE_CTR, counter=count)
+
+        upload_progress = 0
+        completion_file_handle = None
+
+        mac_str = '\0' * 16
+        mac_encryptor = AES.new(k_str, AES.MODE_CBC,
+                                mac_str.encode("utf8"))
+        iv_str = a32_to_str([ul_key[4], ul_key[5], ul_key[4], ul_key[5]])
+        if file_size > 0:
             for chunk_start, chunk_size in get_chunks(file_size):
                 chunk = input_file.read(chunk_size)
-                chunk = aes.decrypt(chunk)
-                temp_output_file.write(chunk)
+                upload_progress += len(chunk)
 
                 encryptor = AES.new(k_str, AES.MODE_CBC, iv_str)
                 for i in range(0, len(chunk) - 16, 16):
@@ -730,121 +828,68 @@ class Mega:
 
                 block = chunk[i:i + 16]
                 if len(block) % 16:
-                    block += b'\0' * (16 - (len(block) % 16))
+                    block += makebyte('\0' * (16 - len(block) % 16))
                 mac_str = mac_encryptor.encrypt(encryptor.encrypt(block))
 
-                file_info = os.stat(temp_output_file.name)
-                logger.info('%s of %s downloaded', file_info.st_size,
-                            file_size)
-            file_mac = str_to_a32(mac_str)
-            # check mac integrity
-            if (file_mac[0] ^ file_mac[1],
-                    file_mac[2] ^ file_mac[3]) != meta_mac:
-                raise ValueError('Mismatched mac')
-            output_path = Path(dest_path + file_name)
-            shutil.move(temp_output_file.name, output_path)
-            return output_path
-
-    def upload(self, filename, dest=None, dest_filename=None):
-        # determine storage node
-        if dest is None:
-            # if none set, upload to cloud drive node
-            if not hasattr(self, 'root_id'):
-                self.get_files()
-            dest = self.root_id
-
-        # request upload url, call 'u' method
-        with open(filename, 'rb') as input_file:
-            file_size = os.path.getsize(filename)
-            ul_url = self._api_request({'a': 'u', 's': file_size})['p']
-
-            # generate random aes key (128) for file
-            ul_key = [random.randint(0, 0xFFFFFFFF) for _ in range(6)]
-            k_str = a32_to_str(ul_key[:4])
-            count = Counter.new(
-                128, initial_value=((ul_key[4] << 32) + ul_key[5]) << 64)
-            aes = AES.new(k_str, AES.MODE_CTR, counter=count)
-
-            upload_progress = 0
-            completion_file_handle = None
-
-            mac_str = '\0' * 16
-            mac_encryptor = AES.new(k_str, AES.MODE_CBC,
-                                    mac_str.encode("utf8"))
-            iv_str = a32_to_str([ul_key[4], ul_key[5], ul_key[4], ul_key[5]])
-            if file_size > 0:
-                for chunk_start, chunk_size in get_chunks(file_size):
-                    chunk = input_file.read(chunk_size)
-                    upload_progress += len(chunk)
-
-                    encryptor = AES.new(k_str, AES.MODE_CBC, iv_str)
-                    for i in range(0, len(chunk) - 16, 16):
-                        block = chunk[i:i + 16]
-                        encryptor.encrypt(block)
-
-                    # fix for files under 16 bytes failing
-                    if file_size > 16:
-                        i += 16
-                    else:
-                        i = 0
-
-                    block = chunk[i:i + 16]
-                    if len(block) % 16:
-                        block += makebyte('\0' * (16 - len(block) % 16))
-                    mac_str = mac_encryptor.encrypt(encryptor.encrypt(block))
-
-                    # encrypt file and upload
-                    chunk = aes.encrypt(chunk)
-                    output_file = requests.post(ul_url + "/" +
-                                                str(chunk_start),
-                                                data=chunk,
-                                                timeout=self.timeout)
-                    completion_file_handle = output_file.text
-                    logger.info('%s of %s uploaded', upload_progress,
-                                file_size)
-            else:
-                output_file = requests.post(ul_url + "/0",
-                                            data='',
+                # encrypt file and upload
+                chunk = aes.encrypt(chunk)
+                output_file = requests.post(ul_url + "/" +
+                                            str(chunk_start),
+                                            data=chunk,
                                             timeout=self.timeout)
+                # If the response was successful, no Exception will be raised
+                output_file.raise_for_status()
+
                 completion_file_handle = output_file.text
+                logger.info('%s of %s uploaded', upload_progress,
+                            file_size)
+        else:
+            output_file = requests.post(ul_url + "/0",
+                                        data='',
+                                        timeout=self.timeout)
 
-            logger.info('Chunks uploaded')
-            logger.info('Setting attributes to complete upload')
-            logger.info('Computing attributes')
-            file_mac = str_to_a32(mac_str)
+            # If the response was successful, no Exception will be raised
+            output_file.raise_for_status()
 
-            # determine meta mac
-            meta_mac = (file_mac[0] ^ file_mac[1], file_mac[2] ^ file_mac[3])
+            completion_file_handle = output_file.text
 
-            dest_filename = dest_filename or os.path.basename(filename)
-            attribs = {'n': dest_filename}
+        logger.info('Chunks uploaded')
+        logger.info('Setting attributes to complete upload')
+        logger.info('Computing attributes')
+        file_mac = str_to_a32(mac_str)
 
-            encrypt_attribs = base64_url_encode(
-                encrypt_attr(attribs, ul_key[:4]))
-            key = [
-                ul_key[0] ^ ul_key[4], ul_key[1] ^ ul_key[5],
-                ul_key[2] ^ meta_mac[0], ul_key[3] ^ meta_mac[1], ul_key[4],
-                ul_key[5], meta_mac[0], meta_mac[1]
-            ]
-            encrypted_key = a32_to_base64(encrypt_key(key, self.master_key))
-            logger.info('Sending request to update attributes')
-            # update attributes
-            data = self._api_request({
-                'a':
-                'p',
-                't':
-                dest,
-                'i':
-                self.request_id,
-                'n': [{
-                    'h': completion_file_handle,
-                    't': 0,
-                    'a': encrypt_attribs,
-                    'k': encrypted_key
-                }]
-            })
-            logger.info('Upload complete')
-            return data
+        # determine meta mac
+        meta_mac = (file_mac[0] ^ file_mac[1], file_mac[2] ^ file_mac[3])
+
+        dest_filename = dest_filename or os.path.basename(filename)
+        attribs = {'n': dest_filename}
+
+        encrypt_attribs = base64_url_encode(
+            encrypt_attr(attribs, ul_key[:4]))
+        key = [
+            ul_key[0] ^ ul_key[4], ul_key[1] ^ ul_key[5],
+            ul_key[2] ^ meta_mac[0], ul_key[3] ^ meta_mac[1], ul_key[4],
+            ul_key[5], meta_mac[0], meta_mac[1]
+        ]
+        encrypted_key = a32_to_base64(encrypt_key(key, self.master_key))
+        logger.info('Sending request to update attributes')
+        # update attributes
+        data = self._api_request({
+            'a':
+            'p',
+            't':
+            dest,
+            'i':
+            self.request_id,
+            'n': [{
+                'h': completion_file_handle,
+                't': 0,
+                'a': encrypt_attribs,
+                'k': encrypted_key
+            }]
+        })
+        logger.info('Upload complete')
+        return data
 
     def _mkdir(self, name, parent_node_id):
         # generate random aes key (128) for folder
