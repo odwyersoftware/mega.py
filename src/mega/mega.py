@@ -679,17 +679,11 @@ class Mega:
         if file is None:
             if is_public:
                 file_key = base64_to_a32(file_key)
-                file_data = self._api_request({
-                    'a': 'g',
-                    'g': 1,
-                    'p': file_handle
-                })
-            else:
-                file_data = self._api_request({
-                    'a': 'g',
-                    'g': 1,
-                    'n': file_handle
-                })
+            file_data = self._api_request({
+                'a': 'g',
+                'g': 1,
+                'p' if is_public else 'n': file_handle
+            })
 
             k = (file_key[0] ^ file_key[4], file_key[1] ^ file_key[5],
                  file_key[2] ^ file_key[6], file_key[3] ^ file_key[7])
@@ -702,7 +696,7 @@ class Mega:
             meta_mac = file['meta_mac']
 
         # Seems to happens sometime... When this occurs, files are
-        # inaccessible also in the official also in the official web app.
+        # inaccessible also in the official web app.
         # Strangely, files can come back later.
         if 'g' not in file_data:
             raise RequestError('File not accessible anymore')
