@@ -784,10 +784,10 @@ class Mega:
             ul_url = self._api_request({'a': 'u', 's': file_size})['p']
 
             # generate random aes key (128) for file
-            ul_key = [random.randint(0, 0xFFFFFFFF) for _ in range(6)]
-            k_str = a32_to_str(ul_key[:4])
+            ul_key = [random.randint(0, 0xFFFFFFFF) for _ in range(6)]  # generate 192 bits of random data
+            k_str = a32_to_str(ul_key[:4])  # use 128 bits for the key...
             count = Counter.new(
-                128, initial_value=((ul_key[4] << 32) + ul_key[5]) << 64)
+                128, initial_value=((ul_key[4] << 32) + ul_key[5]) << 64)  # and 64 bits for the IV (which has size 128 bits anyway)
             aes = AES.new(k_str, AES.MODE_CTR, counter=count)
 
             upload_progress = 0
