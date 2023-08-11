@@ -1,6 +1,5 @@
 import math
 import re
-import json
 import logging
 import secrets
 from pathlib import Path
@@ -168,10 +167,10 @@ class Mega:
         response = requests.post(
             url,
             params=params,
-            data=json.dumps(data),
+            json=data,
             timeout=self.timeout,
         )
-        json_resp = json.loads(response.text)
+        json_resp = response.json()
         try:
             if isinstance(json_resp, list):
                 int_resp = json_resp[0] if isinstance(json_resp[0],
