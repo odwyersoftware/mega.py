@@ -1,4 +1,4 @@
-requests>=0.10
-pycryptodome>=3.9.6,<4.0.0
-tenacity>=5.1.5
-tqdm>=4.62.3
+requests>=2.27.1
+pycryptodome>=3.20.0,<4.0.0
+tenacity>=8.2.2
+tqdm>=4.64.1

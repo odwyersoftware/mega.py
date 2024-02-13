@@ -1,9 +1,7 @@
 Mega.py
 =======
 
-[![Downloads](https://pypip.in/d/mega.py/badge.png)](https://crate.io/packages/mega.py/)  [![PyPI version](https://badge.fury.io/py/mega.py.svg)](https://pypi.org/project/mega.py/)
-
-Python library for the [Mega.nz](https://mega.nz/aff=Zo6IxNaHw14)
+Python library for the [Mega.nz](https://mega.nz)
 API, currently supporting:
 
 -   login
@@ -24,17 +22,12 @@ How To Use
 
 ### Create a Mega account
 
-First, [create an account with Mega](https://mega.nz/aff=Zo6IxNaHw14) .
+For downloading links, no account is needed. To use upload capabilities, [create an account with Mega](https://mega.nz) .
 
 ### Install mega.py package
 
-Run the following command, or run setup from the latest github source.
+Clone the repository, and then run:
 
-```python
-pip install mega.py
-```
-
-or, for installing after having cloned the repo:
 ```sh
 cd mega.py
 pip install .
@@ -164,9 +157,3 @@ Returns a dict of folder node name and node\_id, e.g.
 file = m.find('myfile.doc')
 m.rename(file, 'my_file.doc')
 ```
-
-## Contact Support
-
-For paid priority support contact [mega@odwyer.software](mailto:mega@odwyer.software).
-
-**[UK Python Development Agency](https://odwyer.software/)**
