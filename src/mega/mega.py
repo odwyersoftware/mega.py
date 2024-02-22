@@ -1,6 +1,5 @@
 import math
 import re
-import json
 import logging
 import secrets
 from pathlib import Path
@@ -15,14 +14,16 @@ import tempfile
 import shutil
 
 import requests
+import tqdm
+
 from tenacity import retry, wait_exponential, retry_if_exception_type
 
 from .errors import ValidationError, RequestError
 from .crypto import (a32_to_base64, encrypt_key, base64_url_encode,
                      encrypt_attr, base64_to_a32, base64_url_decode,
                      decrypt_attr, a32_to_str, get_chunks, str_to_a32,
-                     decrypt_key, mpi_to_int, stringhash, prepare_key, make_id,
-                     makebyte, modular_inverse)
+                     decrypt_key, mpi_to_int, stringhash, prepare_key,
+                     make_id, modular_inverse)
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,8 @@ logger = logging.getLogger(__name__)
 class Mega:
     def __init__(self, options=None):
         self.schema = 'https'
-        self.domain = 'mega.co.nz'
+        self.domain = 'mega.nz'
+        self.api_domain = 'mega.co.nz'  # g.api.mega.nz doesn't exist, have to use the old domain name for api access
         self.timeout = 160  # max secs to wait for resp from api requests
         self.sid = None
         self.sequence_num = random.randint(0, 0xFFFFFFFF)
@@ -54,7 +56,6 @@ class Mega:
         logger.info('Logging in user...')
         email = email.lower()
         get_user_salt_resp = self._api_request({'a': 'us0', 'user': email})
-        user_salt = None
         try:
             user_salt = base64_to_a32(get_user_salt_resp['s'])
         except KeyError:
@@ -162,14 +163,14 @@ class Mega:
         if not isinstance(data, list):
             data = [data]
 
-        url = f'{self.schema}://g.api.{self.domain}/cs'
+        url = f'{self.schema}://g.api.{self.api_domain}/cs'
         response = requests.post(
             url,
             params=params,
-            data=json.dumps(data),
+            json=data,
             timeout=self.timeout,
         )
-        json_resp = json.loads(response.text)
+        json_resp = response.json()
         try:
             if isinstance(json_resp, list):
                 int_resp = json_resp[0] if isinstance(json_resp[0],
@@ -188,8 +189,27 @@ class Mega:
             raise RequestError(int_resp)
         return json_resp[0]
 
-    def _parse_url(self, url):
-        """Parse file id and key from url."""
+    def _is_mega_link(self, url: str):
+        return url.startswith(f'{self.schema}://{self.domain}') or url.startswith(f'{self.schema}://{self.api_domain}')
+
+    def _follow_redirects(self, url: str):
+        for i in range(10):
+            if self._is_mega_link(url):
+                return url
+            resp = requests.get(url, allow_redirects=False)
+            if resp.is_redirect or resp.is_permanent_redirect:
+                url = resp.headers['Location']
+                print(f'Found redirect: {url}')
+                continue
+            else:
+                raise RuntimeError('Url is not a redirect nor a mega link')
+        raise RuntimeError('Too many redirects')
+
+    def _parse_url(self, url: str):
+        # Parse file id and key from url.
+        # Follow redirects from URL shortening services, if any
+        url = self._follow_redirects(url)
+
         if '/file/' in url:
             # V2 URL structure
             url = url.replace(' ', '')
@@ -324,7 +344,6 @@ class Mega:
         filename = path.name
         parent_dir_name = path.parent.name
         for file in list(files.items()):
-            parent_node_id = None
             try:
                 if parent_dir_name:
                     parent_node_id = self.find_path_descriptor(parent_dir_name,
@@ -391,7 +410,8 @@ class Mega:
         else:
             raise ValidationError('File id and key must be present')
 
-    def _node_data(self, node):
+    @staticmethod
+    def _node_data(node):
         try:
             return node[1]
         except (IndexError, KeyError):
@@ -417,7 +437,7 @@ class Mega:
         user_data = self._api_request({'a': 'ug'})
         return user_data
 
-    def get_node_by_type(self, type):
+    def get_node_by_type(self, node_type):
         """
         Get a node by it's numeric type id, e.g:
         0: file
@@ -428,7 +448,7 @@ class Mega:
         """
         nodes = self.get_files()
         for node in list(nodes.items()):
-            if node[1]['t'] == type:
+            if node[1]['t'] == node_type:
                 return node
 
     def get_files_in_node(self, target):
@@ -457,7 +477,8 @@ class Mega:
         node_id = self.get_id_from_obj(node_data)
         return node_id
 
-    def get_id_from_obj(self, node_data):
+    @staticmethod
+    def get_id_from_obj(node_data):
         """
         Get node id from a file object
         """
@@ -630,7 +651,7 @@ class Mega:
         nodes = self.get_files()
         return self.get_folder_link(nodes[node_id])
 
-    def download_url(self, url, dest_path=None, dest_filename=None):
+    def download_url(self, url, dest_path=None, dest_filename=None, no_temp_file=False):
         """
         Download a file by it's public url
         """
@@ -643,6 +664,7 @@ class Mega:
             dest_path=dest_path,
             dest_filename=dest_filename,
             is_public=True,
+            no_temp_file=no_temp_file
         )
 
     def _download_file(self,
@@ -651,21 +673,16 @@ class Mega:
                        dest_path=None,
                        dest_filename=None,
                        is_public=False,
-                       file=None):
+                       file=None,
+                       no_temp_file=False):
         if file is None:
             if is_public:
                 file_key = base64_to_a32(file_key)
-                file_data = self._api_request({
-                    'a': 'g',
-                    'g': 1,
-                    'p': file_handle
-                })
-            else:
-                file_data = self._api_request({
-                    'a': 'g',
-                    'g': 1,
-                    'n': file_handle
-                })
+            file_data = self._api_request({
+                'a': 'g',
+                'g': 1,
+                'p' if is_public else 'n': file_handle
+            })
 
             k = (file_key[0] ^ file_key[4], file_key[1] ^ file_key[5],
                  file_key[2] ^ file_key[6], file_key[3] ^ file_key[7])
@@ -678,7 +695,7 @@ class Mega:
             meta_mac = file['meta_mac']
 
         # Seems to happens sometime... When this occurs, files are
-        # inaccessible also in the official also in the official web app.
+        # inaccessible also in the official web app.
         # Strangely, files can come back later.
         if 'g' not in file_data:
             raise RequestError('File not accessible anymore')
@@ -698,52 +715,59 @@ class Mega:
             dest_path = ''
         else:
             dest_path += '/'
+        output_path = Path(dest_path + file_name)
 
-        with tempfile.NamedTemporaryFile(mode='w+b',
+        with (tempfile.NamedTemporaryFile(mode='w+b',
                                          prefix='megapy_',
-                                         delete=False) as temp_output_file:
-            k_str = a32_to_str(k)
-            counter = Counter.new(128,
-                                  initial_value=((iv[0] << 32) + iv[1]) << 64)
-            aes = AES.new(k_str, AES.MODE_CTR, counter=counter)
+                                         delete=False) if not no_temp_file else open(output_path, 'xb')) as temp_output_file:
+            with tqdm.tqdm(total=file_size, unit='iB', unit_scale=True) as progress_bar:
+                k_str = a32_to_str(k)
+                counter = Counter.new(128,
+                                      initial_value=((iv[0] << 32) + iv[1]) << 64)
+                aes = AES.new(k_str, AES.MODE_CTR, counter=counter)
 
-            mac_str = '\0' * 16
-            mac_encryptor = AES.new(k_str, AES.MODE_CBC,
-                                    mac_str.encode("utf8"))
-            iv_str = a32_to_str([iv[0], iv[1], iv[0], iv[1]])
+                # mega.nz improperly uses CBC as a MAC mode, so after each chunk, the computed mac_bytes are used as IV for the next chunk MAC accumulation
+                mac_bytes = b'\0' * 16
+                mac_encryptor = AES.new(k_str, AES.MODE_CBC, mac_bytes)
+                iv_str = a32_to_str([iv[0], iv[1], iv[0], iv[1]])
 
-            for chunk_start, chunk_size in get_chunks(file_size):
-                chunk = input_file.read(chunk_size)
-                chunk = aes.decrypt(chunk)
-                temp_output_file.write(chunk)
+                for chunk_start, chunk_size in get_chunks(file_size):
+                    # print('Chunk size from generator: '+chunk_size)
+                    chunk = input_file.read(chunk_size)
+                    chunk = aes.decrypt(chunk)
+                    temp_output_file.write(chunk)
+                    progress_bar.update(len(chunk))
 
-                encryptor = AES.new(k_str, AES.MODE_CBC, iv_str)
-                for i in range(0, len(chunk) - 16, 16):
-                    block = chunk[i:i + 16]
-                    encryptor.encrypt(block)
+                    encryptor = AES.new(k_str, AES.MODE_CBC, iv_str)
 
-                # fix for files under 16 bytes failing
-                if file_size > 16:
-                    i += 16
-                else:
-                    i = 0
+                    # take last 16-N bytes from chunk (with N between 1 and 16, including extremes)
+                    mv = memoryview(chunk) # avoid copying memory for the entire chunk when slicing
+                    modchunk = len(chunk) % 16
+                    if modchunk == 0:
+                        # ensure we reserve the last 16 bytes anyway, we have to feed them into mac_encryptor
+                        modchunk = 16
+                        last_block = chunk[-modchunk:] # fine to copy bytes here, they're only a few bytes
+                    else:
+                        last_block = chunk[-modchunk:] + (b'\0' * (16 - modchunk)) # pad last block to 16 bytes
+                    rest_of_chunk = mv[:-modchunk]
 
-                block = chunk[i:i + 16]
-                if len(block) % 16:
-                    block += b'\0' * (16 - (len(block) % 16))
-                mac_str = mac_encryptor.encrypt(encryptor.encrypt(block))
+                    encryptor.encrypt(rest_of_chunk)
+                    input_to_mac = encryptor.encrypt(last_block)
+                    mac_bytes = mac_encryptor.encrypt(input_to_mac)
 
-                file_info = os.stat(temp_output_file.name)
-                logger.info('%s of %s downloaded', file_info.st_size,
-                            file_size)
-            file_mac = str_to_a32(mac_str)
-            # check mac integrity
-            if (file_mac[0] ^ file_mac[1],
-                    file_mac[2] ^ file_mac[3]) != meta_mac:
-                raise ValueError('Mismatched mac')
-            output_path = Path(dest_path + file_name)
-            shutil.move(temp_output_file.name, output_path)
-            return output_path
+                    # file_info = os.stat(temp_output_file.name)
+                    # logger.info('%s of %s downloaded', file_info.st_size,
+                    #             file_size)
+                file_mac = str_to_a32(mac_bytes)
+                # check mac integrity
+                if (file_mac[0] ^ file_mac[1],
+                        file_mac[2] ^ file_mac[3]) != meta_mac:
+                    raise ValueError('Mismatched mac')
+                output_name = temp_output_file.name
+        if not no_temp_file:
+            print('Moving temporary file to destination path')
+            shutil.move(output_name, output_path)
+        return output_path
 
     def upload(self, filename, dest=None, dest_filename=None):
         # determine storage node
@@ -759,18 +783,17 @@ class Mega:
             ul_url = self._api_request({'a': 'u', 's': file_size})['p']
 
             # generate random aes key (128) for file
-            ul_key = [random.randint(0, 0xFFFFFFFF) for _ in range(6)]
-            k_str = a32_to_str(ul_key[:4])
+            ul_key = [random.randint(0, 0xFFFFFFFF) for _ in range(6)]  # generate 192 bits of random data
+            k_str = a32_to_str(ul_key[:4])  # use 128 bits for the key...
             count = Counter.new(
-                128, initial_value=((ul_key[4] << 32) + ul_key[5]) << 64)
+                128, initial_value=((ul_key[4] << 32) + ul_key[5]) << 64)  # and 64 bits for the IV (which has size 128 bits anyway)
             aes = AES.new(k_str, AES.MODE_CTR, counter=count)
 
             upload_progress = 0
             completion_file_handle = None
 
-            mac_str = '\0' * 16
-            mac_encryptor = AES.new(k_str, AES.MODE_CBC,
-                                    mac_str.encode("utf8"))
+            mac_bytes = b'\0' * 16
+            mac_encryptor = AES.new(k_str, AES.MODE_CBC, mac_bytes)
             iv_str = a32_to_str([ul_key[4], ul_key[5], ul_key[4], ul_key[5]])
             if file_size > 0:
                 for chunk_start, chunk_size in get_chunks(file_size):
@@ -789,9 +812,10 @@ class Mega:
                         i = 0
 
                     block = chunk[i:i + 16]
-                    if len(block) % 16:
-                        block += makebyte('\0' * (16 - len(block) % 16))
-                    mac_str = mac_encryptor.encrypt(encryptor.encrypt(block))
+                    modlenblock = len(block) % 16
+                    if modlenblock:
+                        block += (b'\0' * (16 - modlenblock))
+                    mac_bytes = mac_encryptor.encrypt(encryptor.encrypt(block))
 
                     # encrypt file and upload
                     chunk = aes.encrypt(chunk)
@@ -811,7 +835,7 @@ class Mega:
             logger.info('Chunks uploaded')
             logger.info('Setting attributes to complete upload')
             logger.info('Computing attributes')
-            file_mac = str_to_a32(mac_str)
+            file_mac = str_to_a32(mac_bytes)
 
             # determine meta mac
             meta_mac = (file_mac[0] ^ file_mac[1], file_mac[2] ^ file_mac[3])

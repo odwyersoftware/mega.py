@@ -1,37 +1,28 @@
-from Crypto.Cipher import AES
-import json
 import base64
-import struct
 import binascii
+import codecs
+import json
 import random
-import sys
+import struct
 
-# Python3 compatibility
-if sys.version_info < (3, ):
+from Crypto.Cipher import AES
 
-    def makebyte(x):
-        return x
+EMPTY_IV = b'\0'*16
 
-    def makestring(x):
-        return x
-else:
-    import codecs
+def makebyte(x):
+    return codecs.latin_1_encode(x)[0]
 
-    def makebyte(x):
-        return codecs.latin_1_encode(x)[0]
 
-    def makestring(x):
-        return codecs.latin_1_decode(x)[0]
+def makestring(x):
+    return codecs.latin_1_decode(x)[0]
 
 
 def aes_cbc_encrypt(data, key):
-    aes_cipher = AES.new(key, AES.MODE_CBC, makebyte('\0' * 16))
-    return aes_cipher.encrypt(data)
+    return AES.new(key, AES.MODE_CBC, EMPTY_IV).encrypt(data)
 
 
 def aes_cbc_decrypt(data, key):
-    aes_cipher = AES.new(key, AES.MODE_CBC, makebyte('\0' * 16))
-    return aes_cipher.decrypt(data)
+    return AES.new(key, AES.MODE_CBC, EMPTY_IV).decrypt(data)
 
 
 def aes_cbc_encrypt_a32(data, key):
@@ -42,8 +33,8 @@ def aes_cbc_decrypt_a32(data, key):
     return str_to_a32(aes_cbc_decrypt(a32_to_str(data), a32_to_str(key)))
 
 
-def stringhash(str, aeskey):
-    s32 = str_to_a32(str)
+def stringhash(s, aeskey):
+    s32 = str_to_a32(s)
     h32 = [0, 0, 0, 0]
     for i in range(len(s32)):
         h32[i % 4] ^= s32[i]
@@ -65,6 +56,8 @@ def prepare_key(arr):
 
 
 def encrypt_key(a, key):
+	# this sum, which is applied to a generator of tuples, actually flattens the output list of lists of that generator
+	# i.e. it's equivalent to tuple([item for t in generatorOfLists for item in t])
     return sum((aes_cbc_encrypt_a32(a[i:i + 4], key)
                 for i in range(0, len(a), 4)), ())
 
@@ -85,7 +78,18 @@ def decrypt_attr(attr, key):
     attr = aes_cbc_decrypt(attr, a32_to_str(key))
     attr = makestring(attr)
     attr = attr.rstrip('\0')
-    return json.loads(attr[4:]) if attr[:6] == 'MEGA{"' else False
+
+    prefix = 'MEGA{"'
+    if attr.startswith(prefix):
+        i1 = 4
+        i2 = attr.find('}')
+        if i2 >= 0:
+            i2+=1
+            return json.loads(attr[i1:i2])
+        else:
+            raise RuntimeError(f'Unable to properly decode filename, raw content is: {attr}')
+    else:
+        return False
 
 
 def a32_to_str(a):
@@ -149,6 +153,8 @@ def a32_to_base64(a):
     return base64_url_encode(a32_to_str(a))
 
 
+# generates a list of chunks of the kind (offset, chunk_size), where offset refers to the file start
+# chunk_size starts at 0x20000 (100 KiB), and then increments linearly till saturation to 0x100000 (1 MiB)
 def get_chunks(size):
     p = 0
     s = 0x20000

@@ -7,7 +7,7 @@ import pytest
 
 from mega import Mega
 
-TEST_CONTACT = 'test@mega.co.nz'
+TEST_CONTACT = 'test@mega.nz'
 TEST_PUBLIC_URL = (
     'https://mega.nz/#!hYVmXKqL!r0d0-WRnFwulR_shhuEDwrY1Vo103-am1MyUy8oV6Ps')
 TEST_FILE = os.path.basename(__file__)
@@ -80,7 +80,7 @@ class TestExport:
 
             if not public_url:
                 public_url = result_public_share_url
-            assert result_public_share_url.startswith('https://mega.co.nz/#F!')
+            assert result_public_share_url.startswith('https://mega.nz/#F!')
             assert result_public_share_url == public_url
 
     def test_export_folder_within_folder(self, mega, folder_name):
@@ -89,14 +89,14 @@ class TestExport:
 
         result_public_share_url = mega.export(path=folder_path)
 
-        assert result_public_share_url.startswith('https://mega.co.nz/#F!')
+        assert result_public_share_url.startswith('https://mega.nz/#F!')
 
     def test_export_folder_using_node_id(self, mega, folder_name):
         node_id = mega.find(folder_name)[0]
 
         result_public_share_url = mega.export(node_id=node_id)
 
-        assert result_public_share_url.startswith('https://mega.co.nz/#F!')
+        assert result_public_share_url.startswith('https://mega.nz/#F!')
 
     def test_export_single_file(self, mega, folder_name):
         # Upload a single file into a folder
@@ -109,7 +109,7 @@ class TestExport:
         for _ in range(2):
             result_public_share_url = mega.export(path)
 
-            assert result_public_share_url.startswith('https://mega.co.nz/#!')
+            assert result_public_share_url.startswith('https://mega.nz/#!')
 
 
 def test_import_public_url(mega):
@@ -244,6 +244,6 @@ class TestAPIRequest:
         response_text,
     ):
         with requests_mock.Mocker() as m:
-            m.post(f'{mega.schema}://g.api.{mega.domain}/cs',
+            m.post(f'{mega.schema}://g.api.{mega.api_domain}/cs',
                    text=response_text)
             mega._api_request(data={})

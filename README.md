@@ -11,11 +11,7 @@ Learn how to use it: https://github.com/meganz/MEGAcmd/blob/master/UserGuide.md
 Mega.py
 =======
 
-[![Build
-Status](https://travis-ci.org/odwyersoftware/mega.py.png?branch=master)](https://travis-ci.org/odwyersoftware/mega.py)
-[![Downloads](https://pypip.in/d/mega.py/badge.png)](https://crate.io/packages/mega.py/)  [![PyPI version](https://badge.fury.io/py/mega.py.svg)](https://pypi.org/project/mega.py/)
-
-Python library for the [Mega.co.nz](https://mega.nz/aff=Zo6IxNaHw14)
+Python library for the [Mega.nz](https://mega.nz)
 API, currently supporting:
 
 -   login
@@ -36,14 +32,15 @@ How To Use
 
 ### Create a Mega account
 
-First, [create an account with Mega](https://mega.nz/aff=Zo6IxNaHw14) .
+For downloading links, no account is needed. To use upload capabilities, [create an account with Mega](https://mega.nz) .
 
 ### Install mega.py package
 
-Run the following command, or run setup from the latest github source.
+Clone the repository, and then run:
 
-```python
-pip install mega.py
+```sh
+cd mega.py
+pip install .
 ```
 
 ### Import mega.py
@@ -133,7 +130,7 @@ m.upload('myfile.doc', folder[0])
 ```python
 file = m.find('myfile.doc')
 m.download(file)
-m.download_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
+m.download_url('https://mega.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
 m.download(file, '/home/john-smith/Desktop')
 # specify optional download filename (download_url() supports this also)
 m.download(file, '/home/john-smith/Desktop', 'myfile.zip')
@@ -142,9 +139,9 @@ m.download(file, '/home/john-smith/Desktop', 'myfile.zip')
 ### Import a file from URL, optionally specify destination folder
 
 ```python
-m.import_public_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
+m.import_public_url('https://mega.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc')
 folder_node = m.find('Documents')[1]
-m.import_public_url('https://mega.co.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc', dest_node=folder_node)
+m.import_public_url('https://mega.nz/#!utYjgSTQ!OM4U3V5v_W4N5edSo0wolg1D5H0fwSrLD3oLnLuS9pc', dest_node=folder_node)
 ```
 
 ### Create a folder
@@ -170,9 +167,3 @@ Returns a dict of folder node name and node\_id, e.g.
 file = m.find('myfile.doc')
 m.rename(file, 'my_file.doc')
 ```
-
-## Contact Support
-
-For paid priority support contact [mega@odwyer.software](mailto:mega@odwyer.software).
-
-**[UK Python Development Agency](https://odwyer.software/)**
